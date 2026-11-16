@@ -4882,7 +4882,7 @@ compilarCerebroCompletoCockpit = function(textoPergunta = "") {
 
 // 2. DESCOBERTA AUTOMÁTICA DO MODELO MAIS RÁPIDO E INTELIGENTE DA SUA CONTA GOOGLE
 // ==============================================================
-// MOTOR GEMINI CORRIGIDO: SUPORTE A MÚLTIPLAS IMAGENS E TEXTO COMPLETO
+// MOTOR GEMINI CALIBRADO PARA GERAÇÃO 3.5 FLASH-LITE / 4 HYDROGEN / 3.1 PRO
 // ==============================================================
 let listaModelosReaisCache = null;
 
@@ -4897,29 +4897,41 @@ async function obterModelosReaisDaChave(apiKey) {
             const disponiveis = data.models
                 .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
                 .map(m => m.name.replace('models/', ''))
-                .filter(nome => nome.includes('gemini') && !nome.includes('vision') && !nome.includes('tts') && !nome.includes('image') && !nome.includes('embedding'));
+                // Ignora os modelos antigos (1.5, 2.0, 2.5) que o Google bloqueou para contas novas
+                .filter(nome => (nome.includes('gemini') || nome.includes('hydrogen') || nome.includes('argon')) 
+                    && !nome.includes('1.5') 
+                    && !nome.includes('2.0') 
+                    && !nome.includes('2.5') 
+                    && !nome.includes('vision') 
+                    && !nome.includes('tts') 
+                    && !nome.includes('image') 
+                    && !nome.includes('embedding'));
 
-            // Prioriza os modelos multimodais reais mais fortes e rápidos do Google AI Studio
+            // Prioridade 1: 3.5 Flash Lite | Prioridade 2: 4 Hydrogen | Prioridade 3: 3.1 Pro Preview
             disponiveis.sort((a, b) => {
                 const peso = (n) => {
-                    if (n === 'gemini-2.5-flash') return 1;
-                    if (n.includes('2.5-flash')) return 2;
-                    if (n.includes('2.0-flash')) return 3;
-                    if (n.includes('2.5-pro')) return 4;
-                    if (n.includes('flash')) return 5;
+                    const nome = n.toLowerCase();
+                    if (nome.includes('3.5') && nome.includes('flash')) return 1; // 3.5 Flash Lite
+                    if (nome.includes('hydrogen') || nome.includes('gemini-4')) return 2; // 4 Hydrogen
+                    if (nome.includes('3.1-pro')) return 3; // 3.1 Pro Preview
+                    if (nome.includes('flash-lite')) return 4;
+                    if (nome.includes('flash')) return 5;
+                    if (nome.includes('3.1') || nome.includes('3.5')) return 6;
                     return 9;
                 };
                 return peso(a) - peso(b);
             });
 
+            console.log("🚀 Modelos ativos encontrados na sua conta:", disponiveis);
+
             if (disponiveis.length > 0) {
-                listaModelosReaisCache = disponiveis.slice(0, 3);
+                listaModelosReaisCache = disponiveis.slice(0, 4);
                 return listaModelosReaisCache;
             }
         }
     } catch (e) {}
-    // Fallback oficial do Google AI Studio
-    return ['gemini-2.5-flash', 'gemini-2.0-flash'];
+    // Fallback direto para os modelos novos da sua conta
+    return ['gemini-3.5-flash-lite', 'gemini-3.5-flash-lite-preview', 'gemini-3.1-pro-preview'];
 }
 
 chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true) {
@@ -4946,7 +4958,6 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
         if (item.tipoCurto === 'texto' && item.textoExtraido) {
             textosDeArquivos += `\n\n--- CONTEÚDO DO ARQUIVO ANEXADO (${item.nome}) ---\n${item.textoExtraido}`;
         } else if (item.base64Data) {
-            // Limpa eventual prefixo data:image/... caso tenha ficado salvo
             const base64Puro = item.base64Data.includes(',') ? item.base64Data.split(',')[1] : item.base64Data;
             userParts.push({
                 inlineData: {
@@ -4964,7 +4975,7 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
 
     for (const mod of modelosParaTentar) {
         const controller = new AbortController();
-        const timerTimeout = setTimeout(() => controller.abort(), 120000); // 120 segundos para múltiplas imagens
+        const timerTimeout = setTimeout(() => controller.abort(), 120000); // 120s para ler até 10 prints com folga
 
         try {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${encodeURIComponent(configGeminiGem.apiKey)}`;
@@ -4976,11 +4987,10 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
                 contents: [{ role: "user", parts: userParts }],
                 generationConfig: {
                     temperature: 0.2,
-                    maxOutputTokens: 8192 // <--- AUMENTADO DE 2000 PARA 8192 PARA NUNCA CORTAR RESPOSTAS LONGAS!
+                    maxOutputTokens: 8192 // Garante que o passo a passo saia 100% completo sem cortar!
                 }
             };
             
-            // IMPORTANTE: SEM keepalive: true (pois keepalive bloqueia envios maiores que 64KB com imagens!)
             const resp = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
