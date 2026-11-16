@@ -1889,7 +1889,7 @@ async function adicionarArquivoFisicoGem(file, urlOriginal = '') {
     const nome = file.name || `Print_${window.filaMidiasGemHUD.length + 1}.jpg`;
 
     if (mime.startsWith('image/')) {
-        const dataUrl = await comprimirImagemParaBase64(file, 1400, 0.85);
+		const dataUrl = await comprimirImagemParaBase64(file, 1024, 0.75);
         const b64 = dataUrl.split(',')[1];
         if (jaExisteMidiaNaFila(urlOriginal || dataUrl, b64)) return false;
 
@@ -4882,7 +4882,7 @@ compilarCerebroCompletoCockpit = function(textoPergunta = "") {
 
 // 2. DESCOBERTA AUTOMÁTICA DO MODELO MAIS RÁPIDO E INTELIGENTE DA SUA CONTA GOOGLE
 // ==============================================================
-// MOTOR GEMINI ATUALIZADO: SUPORTE A 3.5 FLASH-LITE, 3.6 E 3.8 FLASH
+// MOTOR GEMINI CORRIGIDO: SUPORTE A MÚLTIPLAS IMAGENS E TEXTO COMPLETO
 // ==============================================================
 let listaModelosReaisCache = null;
 
@@ -4897,15 +4897,16 @@ async function obterModelosReaisDaChave(apiKey) {
             const disponiveis = data.models
                 .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
                 .map(m => m.name.replace('models/', ''))
-                .filter(nome => nome.includes('gemini') && !nome.includes('2.0') && !nome.includes('1.5') && !nome.includes('vision') && !nome.includes('tts') && !nome.includes('image'));
+                .filter(nome => nome.includes('gemini') && !nome.includes('vision') && !nome.includes('tts') && !nome.includes('image') && !nome.includes('embedding'));
 
-            // Prioriza os modelos Flash mais rápidos e recentes (como 3.5 Flash-Lite, 3.6 e 3.8 Flash)
+            // Prioriza os modelos multimodais reais mais fortes e rápidos do Google AI Studio
             disponiveis.sort((a, b) => {
                 const peso = (n) => {
-                    if (n.includes('3.5-flash-lite')) return 1;
-                    if (n.includes('3.6-flash')) return 2;
-                    if (n.includes('3.8-flash')) return 3;
-                    if (n.includes('flash')) return 4;
+                    if (n === 'gemini-2.5-flash') return 1;
+                    if (n.includes('2.5-flash')) return 2;
+                    if (n.includes('2.0-flash')) return 3;
+                    if (n.includes('2.5-pro')) return 4;
+                    if (n.includes('flash')) return 5;
                     return 9;
                 };
                 return peso(a) - peso(b);
@@ -4917,7 +4918,8 @@ async function obterModelosReaisDaChave(apiKey) {
             }
         }
     } catch (e) {}
-    return ['gemini-3.6-flash', 'gemini-3.5-flash-lite'];
+    // Fallback oficial do Google AI Studio
+    return ['gemini-2.5-flash', 'gemini-2.0-flash'];
 }
 
 chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true) {
@@ -4944,10 +4946,12 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
         if (item.tipoCurto === 'texto' && item.textoExtraido) {
             textosDeArquivos += `\n\n--- CONTEÚDO DO ARQUIVO ANEXADO (${item.nome}) ---\n${item.textoExtraido}`;
         } else if (item.base64Data) {
+            // Limpa eventual prefixo data:image/... caso tenha ficado salvo
+            const base64Puro = item.base64Data.includes(',') ? item.base64Data.split(',')[1] : item.base64Data;
             userParts.push({
                 inlineData: {
                     mimeType: item.mimeType || 'image/jpeg',
-                    data: item.base64Data
+                    data: base64Puro
                 }
             });
         }
@@ -4960,7 +4964,7 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
 
     for (const mod of modelosParaTentar) {
         const controller = new AbortController();
-        const timerTimeout = setTimeout(() => controller.abort(), 90000); // Aumentado para 90 segundos;
+        const timerTimeout = setTimeout(() => controller.abort(), 120000); // 120 segundos para múltiplas imagens
 
         try {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${encodeURIComponent(configGeminiGem.apiKey)}`;
@@ -4972,16 +4976,16 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
                 contents: [{ role: "user", parts: userParts }],
                 generationConfig: {
                     temperature: 0.2,
-                    maxOutputTokens: 2000
+                    maxOutputTokens: 8192 // <--- AUMENTADO DE 2000 PARA 8192 PARA NUNCA CORTAR RESPOSTAS LONGAS!
                 }
             };
-			
+            
+            // IMPORTANTE: SEM keepalive: true (pois keepalive bloqueia envios maiores que 64KB com imagens!)
             const resp = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-                signal: controller.signal,
-                keepalive: true
+                signal: controller.signal
             });
 
             clearTimeout(timerTimeout);
