@@ -4067,8 +4067,10 @@ function alternarCheckNaMensagem(msgId, checkIdx, marcado) {
     }
 }
 
-// 7. FILA DE ATÉ 10 MÍDIAS
-function comprimirImagemParaBase64(file, maxDim = 1280, quality = 0.82) {
+// ==============================================================
+// COMPRESSOR OTIMIZADO DE MÍDIAS PARA EVITAR ESTOURO DE PAYLOAD
+// ==============================================================
+function comprimirImagemParaBase64(file, maxDim = 800, quality = 0.7) {
     return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -4085,6 +4087,7 @@ function comprimirImagemParaBase64(file, maxDim = 1280, quality = 0.82) {
                 canvas.height = h;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, w, h);
+                // Retorna em JPEG compactado para não estourar o limite da API
                 resolve(canvas.toDataURL('image/jpeg', quality));
             };
             img.src = e.target.result;
