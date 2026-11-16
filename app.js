@@ -4878,6 +4878,9 @@ compilarCerebroCompletoCockpit = function(textoPergunta = "") {
 };
 
 // 2. DESCOBERTA AUTOMÁTICA DO MODELO MAIS RÁPIDO E INTELIGENTE DA SUA CONTA GOOGLE
+// ==============================================================
+// MOTOR GEMINI ATUALIZADO: SUPORTE A 3.5 FLASH-LITE, 3.6 E 3.8 FLASH
+// ==============================================================
 let listaModelosReaisCache = null;
 
 async function obterModelosReaisDaChave(apiKey) {
@@ -4893,11 +4896,12 @@ async function obterModelosReaisDaChave(apiKey) {
                 .map(m => m.name.replace('models/', ''))
                 .filter(nome => nome.includes('gemini') && !nome.includes('2.0') && !nome.includes('1.5') && !nome.includes('vision') && !nome.includes('tts') && !nome.includes('image'));
 
+            // Prioriza os modelos Flash mais rápidos e recentes (como 3.5 Flash-Lite, 3.6 e 3.8 Flash)
             disponiveis.sort((a, b) => {
                 const peso = (n) => {
-                    if (n.includes('3.5-flash') && !n.includes('lite')) return 1;
-                    if (n.includes('3.8-flash')) return 2;
-                    if (n.includes('flash-lite')) return 3;
+                    if (n.includes('3.5-flash-lite')) return 1;
+                    if (n.includes('3.6-flash')) return 2;
+                    if (n.includes('3.8-flash')) return 3;
                     if (n.includes('flash')) return 4;
                     return 9;
                 };
@@ -4910,10 +4914,9 @@ async function obterModelosReaisDaChave(apiKey) {
             }
         }
     } catch (e) {}
-    return ['gemini-2.5-flash'];
+    return ['gemini-3.6-flash', 'gemini-3.5-flash-lite'];
 }
 
-// 3. CHAMADA MULTIMODAL COMPLETA (TEXTO + IMAGENS/PDFS/ÁUDIOS + CONTEXTO)
 chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true) {
     if (!configGeminiGem.apiKey) {
         toggleGavetaHUD('hud-gemini-drawer');
@@ -4929,7 +4932,7 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
     const saudacao = obterSaudacaoHorario();
 
     const cerebroOtimizado = usarContextoScripts ? compilarCerebroCompletoCockpit(promptUsuario) : "";
-    const contextoVariaveis = `\n\n=== DADOS DO ATENDIMENTO ATUAL ===\nSaudação do horário: "${saudacao}" | Nome do Cliente: "${nomeCliente || 'Use o nome que aparecer no histórico da conversa ou não cite nome'}" | Condomínio: "${nomeCond || 'Verifique se consta no texto/imagem'}"`;
+    const contextoVariaveis = `\n\n=== DADOS DO ATENDIMENTO ATUAL ===\nSaudação do horário: "${saudacao}" | Nome do Cliente: "${nomeCliente || 'Não informado'}" | Condomínio: "${nomeCond || 'Não informado'}"`;
 
     const userParts = [];
     let textosDeArquivos = "";
@@ -4944,18 +4947,6 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
                     data: item.base64Data
                 }
             });
-        } else if (item.previewUrl && item.tipoCurto === 'imagem') {
-            // Se a imagem estava apenas na tela, tenta converter via Canvas antes de enviar
-            const b64Recuperado = await tentarExtrairBase64ViaCanvas(item.previewUrl);
-            if (b64Recuperado) {
-                item.base64Data = b64Recuperado;
-                userParts.push({
-                    inlineData: {
-                        mimeType: 'image/jpeg',
-                        data: b64Recuperado
-                    }
-                });
-            }
         }
     }
 
@@ -4966,7 +4957,7 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
 
     for (const mod of modelosParaTentar) {
         const controller = new AbortController();
-        const timerTimeout = setTimeout(() => controller.abort(), 28000);
+        const timerTimeout = setTimeout(() => controller.abort(), 25000);
 
         try {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${encodeURIComponent(configGeminiGem.apiKey)}`;
@@ -4978,7 +4969,7 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
                 contents: [{ role: "user", parts: userParts }],
                 generationConfig: {
                     temperature: 0.2,
-                    maxOutputTokens: 700
+                    maxOutputTokens: 800
                 }
             };
 
@@ -4986,8 +4977,7 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload),
-                signal: controller.signal,
-                keepalive: true
+                signal: controller.signal
             });
 
             clearTimeout(timerTimeout);
@@ -5000,20 +4990,17 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
                     .join('')?.trim();
 
                 if (textoGerado) {
-                    listaModelosReaisCache = [mod, ...modelosParaTentar.filter(m => m !== mod)];
                     return textoGerado;
                 }
             }
-            ultimoErro = data.error?.message || `O modelo ${mod} está ocupado no momento.`;
+            ultimoErro = data.error?.message || `Erro no modelo ${mod}.`;
         } catch (err) {
             clearTimeout(timerTimeout);
-            ultimoErro = err.name === 'AbortError'
-                ? `O servidor (${mod}) demorou mais de 28s para responder.`
-                : err.message;
+            ultimoErro = err.name === 'AbortError' ? "Tempo limite esgotado (timeout)." : err.message;
         }
     }
 
-    throw new Error(`Parou: ${ultimoErro} — Clique em Responder novamente.`);
+    throw new Error(`Falha na API: ${ultimoErro}`);
 };
 
 // 4. EXECUÇÃO CALIBRADA COM OS 5 TONS E LEITURA INTEGRAL DA CONVERSA + MÍDIAS
