@@ -4957,7 +4957,7 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
 
     for (const mod of modelosParaTentar) {
         const controller = new AbortController();
-        const timerTimeout = setTimeout(() => controller.abort(), 45000);
+        const timerTimeout = setTimeout(() => controller.abort(), 90000); // Aumentado para 90 segundos;
 
         try {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${encodeURIComponent(configGeminiGem.apiKey)}`;
@@ -4969,10 +4969,10 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
                 contents: [{ role: "user", parts: userParts }],
                 generationConfig: {
                     temperature: 0.2,
-                    maxOutputTokens: 2000 // Aumentado de 700/800 para 2000 para evitar cortes
+                    maxOutputTokens: 2000
                 }
             };
-
+			
             const resp = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
