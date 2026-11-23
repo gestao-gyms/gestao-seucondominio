@@ -17,29 +17,60 @@ try {
 const PENSAMENTOS_PADRAO = [
     {
         mantra: "AMOR • CARIDADE • BENEVOLÊNCIA • PAZ",
-        frase: "“Fora da caridade não há salvação. O amor é a centelha divina que ilumina todo o Universo.”"
+        frase: "“Fora da caridade não há salvação. O amor é a centelha divina que ilumina todo o Universo.”",
+        autor: "Allan Kardec"
     },
     {
         mantra: "INFINITO • EVOLUÇÃO • LUZ • ETERNIDADE",
-        frase: "“Nascer, morrer, renascer ainda e progredir sempre, tal é a Lei.”"
+        frase: "“Nascer, morrer, renascer ainda e progredir sempre, tal é a Lei.”",
+        autor: "Allan Kardec"
     },
     {
         mantra: "SERENIDADE • PACIÊNCIA • AMOR • HARMONIA",
-        frase: "“A paciência também é uma caridade; praticai-a com todos aqueles que cruzam o vosso caminho.”"
+        frase: "“A paciência também é uma caridade; praticai-a com todos aqueles que cruzam o vosso caminho.”",
+        autor: "Emmanuel • Chico Xavier"
     },
     {
         mantra: "PLENITUDE • FÉ RACIOCINADA • FRATERNIDADE",
-        frase: "“O amor é de essência divina; resume toda a doutrina de Jesus, porque é o sentimento por excelência.”"
+        frase: "“O amor é de essência divina; resume toda a doutrina de Jesus, porque é o sentimento por excelência.”",
+        autor: "O Evangelho Segundo o Espiritismo"
+    },
+    {
+        mantra: "MANSIDÃO • EQUILÍBRIO • COMPAIXÃO • LUZ",
+        frase: "“A calma é o escudo da alma serena. Onde há equilíbrio, a solução sempre encontra caminho.”",
+        autor: "Joanna de Ângelis"
+    },
+    {
+        mantra: "SERVIÇO • GRATIDÃO • HUMILDADE • BEM",
+        frase: "“O trabalho digno é oração em movimento; cada gesto de auxílio acende uma estrela no íntimo.”",
+        autor: "André Luiz"
+    },
+    {
+        mantra: "CONSOLO • ESPERANÇA • FRATERNIDADE • PAZ",
+        frase: "“Quem espalha gentileza no atendimento colhe paz na consciência e luz na própria jornada.”",
+        autor: "Bezerra de Menezes"
     }
 ];
 
 let pensamentosLuz = JSON.parse(localStorage.getItem('sc_pensamentos_espirita')) || PENSAMENTOS_PADRAO;
 let indicePensamento = 0;
 
+function atualizarAuraHorarioHorizonte() {
+    const h = new Date().getHours();
+    const classe = (h >= 5 && h < 12) ? 'horizon-manha' : (h >= 12 && h < 18 ? 'horizon-tarde' : 'horizon-noite');
+    const doc = (typeof obterDocAtivo === 'function') ? obterDocAtivo() : document;
+    const horizon = doc.querySelector('.cosmic-horizon') || document.querySelector('.cosmic-horizon');
+    if (horizon) {
+        horizon.classList.remove('horizon-manha', 'horizon-tarde', 'horizon-noite');
+        horizon.classList.add(classe);
+    }
+}
+
 function trocarPensamentoEspirita(e) {
     const doc = (typeof obterDocAtivo === 'function') ? obterDocAtivo() : document;
     const elFrase = doc.getElementById('frase-espirita') || document.getElementById('frase-espirita');
     const elMantra = doc.getElementById('mantra-palavras') || document.getElementById('mantra-palavras');
+    const elAutor = doc.getElementById('autor-espirita') || document.getElementById('autor-espirita');
     if (!elFrase || !elMantra) return;
 
     if (elFrase.getAttribute('contenteditable') === 'true' || elMantra.getAttribute('contenteditable') === 'true') {
@@ -54,11 +85,19 @@ function trocarPensamentoEspirita(e) {
     const item = pensamentosLuz[indicePensamento];
 
     elFrase.style.opacity = 0;
+    if (elAutor) elAutor.style.opacity = 0;
     setTimeout(() => {
         elMantra.innerText = item.mantra;
         elFrase.innerText = item.frase;
+        if (elAutor) {
+            elAutor.innerText = item.autor ? `— ${item.autor}` : '';
+            elAutor.style.opacity = 1;
+        }
         elFrase.style.opacity = 1;
-    }, 150);
+    }, 140);
+
+    if (typeof reagirAnjo === 'function') reagirAnjo('spark', 800);
+    if (typeof tocarNotaEterea === 'function') tocarNotaEterea('suave');
 }
 
 function ativarEdicaoFraseTopo(e) {
@@ -114,33 +153,33 @@ function ativarEdicaoFraseTopo(e) {
 }
 
 // ==============================================================
-// 3. MOTOR ULTRA-LEVE (ESTRELAS PRÉ-PINTADAS 1 VEZ + SÓ AS 2 ESTRELAS CADENTES ANIMADAS!)
-// ==============================================================
-// ==============================================================
-// 3. MOTOR ULTRA-LEVE: GALÁXIA ESPIRAL REAL DE ESTRELAS + 2 COMETAS (0% CPU)
+// 3. MOTOR ULTRA-LEVE 2 CAMADAS: ESTRELAS 0% CPU + COMETAS EM DIRTY-RECT
 // ==============================================================
 function iniciarCosmosInfinito(targetDocument = document) {
     const canvas = targetDocument.getElementById('cosmos-canvas');
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
 
-    const staticStarsCanvas = document.createElement('canvas');
-    const staticCtx = staticStarsCanvas.getContext('2d');
+    const staticCanvas = targetDocument.getElementById('cosmos-stars-canvas');
+    const staticCtx = staticCanvas ? staticCanvas.getContext('2d', { alpha: true }) : null;
 
     function gerarCeuEGalaxiaEstatica() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        staticStarsCanvas.width = canvas.width;
-        staticStarsCanvas.height = canvas.height;
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        canvas.width = w;
+        canvas.height = h;
+        if (!staticCanvas || !staticCtx) return;
 
-        staticCtx.clearRect(0, 0, canvas.width, canvas.height);
+        staticCanvas.width = w;
+        staticCanvas.height = h;
+        staticCtx.clearRect(0, 0, w, h);
 
-        // 1. DESENHA 150 ESTRELAS ESPALHADAS NO FUNDO
-        for (let i = 0; i < 150; i++) {
-            const x = Math.random() * canvas.width;
-            const y = Math.random() * canvas.height;
-            const r = Math.random() * 1.5 + 0.3;
-            const alpha = Math.random() * 0.75 + 0.2;
+        // 1. DESENHA 130 ESTRELAS UMA ÚNICA VEZ (0% CPU EM REPOUSO!)
+        for (let i = 0; i < 130; i++) {
+            const x = Math.random() * w;
+            const y = Math.random() * h;
+            const r = Math.random() * 1.45 + 0.3;
+            const alpha = Math.random() * 0.72 + 0.2;
             const cor = Math.random() > 0.7 ? '254, 240, 138' : (Math.random() > 0.4 ? '216, 180, 254' : '186, 230, 253');
 
             staticCtx.beginPath();
@@ -148,10 +187,10 @@ function iniciarCosmosInfinito(targetDocument = document) {
             staticCtx.fillStyle = `rgba(${cor}, ${alpha})`;
             staticCtx.fill();
 
-            if (i % 12 === 0) {
+            if (i % 14 === 0) {
                 staticCtx.strokeStyle = `rgba(${cor}, ${alpha * 0.55})`;
                 staticCtx.lineWidth = 0.7;
-                const tam = r * 3.5;
+                const tam = r * 3.4;
                 staticCtx.beginPath();
                 staticCtx.moveTo(x - tam, y); staticCtx.lineTo(x + tam, y);
                 staticCtx.moveTo(x, y - tam); staticCtx.lineTo(x, y + tam);
@@ -159,11 +198,10 @@ function iniciarCosmosInfinito(targetDocument = document) {
             }
         }
 
-        // 2. DESENHA UMA GALÁXIA ESPIRAL REAL (FEITA DE POEIRA ESTELAR SEM BORDAS!)
-        const gx = canvas.width > 680 ? 330 : 75;
+        // 2. GALÁXIA ESPIRAL ESTÁTICA
+        const gx = w > 680 ? 330 : 75;
         const gy = 48;
 
-        // Halo suave do núcleo da galáxia
         const coreGrad = staticCtx.createRadialGradient(gx, gy, 1, gx, gy, 55);
         coreGrad.addColorStop(0, 'rgba(254, 249, 195, 0.65)');
         coreGrad.addColorStop(0.25, 'rgba(192, 132, 252, 0.28)');
@@ -174,16 +212,14 @@ function iniciarCosmosInfinito(targetDocument = document) {
         staticCtx.arc(gx, gy, 55, 0, Math.PI * 2);
         staticCtx.fill();
 
-        // 220 micro-estrelas formando os 2 braços espirais inclinados da galáxia
         const bracos = 2;
-        for (let j = 0; j < 220; j++) {
+        for (let j = 0; j < 190; j++) {
             const dist = Math.random() * 58 + 2;
             const anguloBraco = (j % bracos) * Math.PI;
             const espiral = dist * 0.085;
             const dispersao = (Math.random() - 0.5) * 0.65;
             const ang = anguloBraco + espiral + dispersao;
 
-            // Achata no eixo Y e inclina em -20 graus para parecer uma galáxia vista em perspectiva
             const rawX = Math.cos(ang) * dist;
             const rawY = Math.sin(ang) * dist * 0.42;
             const rot = -0.35;
@@ -191,7 +227,7 @@ function iniciarCosmosInfinito(targetDocument = document) {
             const py = gy + (rawX * Math.sin(rot) + rawY * Math.cos(rot));
 
             const alphaStar = Math.max(0.08, (1 - dist / 62) * 0.85);
-            const rStar = dist < 14 ? Math.random() * 1.3 + 0.4 : Math.random() * 0.9 + 0.2;
+            const rStar = dist < 14 ? Math.random() * 1.2 + 0.4 : Math.random() * 0.85 + 0.2;
             const corStar = dist < 15 ? '254, 240, 138' : (j % 3 === 0 ? '125, 211, 252' : '233, 213, 255');
 
             staticCtx.beginPath();
@@ -202,9 +238,12 @@ function iniciarCosmosInfinito(targetDocument = document) {
     }
 
     gerarCeuEGalaxiaEstatica();
-    window.addEventListener('resize', gerarCeuEGalaxiaEstatica);
+    let timerResizeCosmos = null;
+    window.addEventListener('resize', () => {
+        clearTimeout(timerResizeCosmos);
+        timerResizeCosmos = setTimeout(gerarCeuEGalaxiaEstatica, 180);
+    });
 
-    // COMETA 1: Guardião do Topo (Ilumina a frase espírita)
     function criarCometaTopo(direcao) {
         const indoEsq = direcao === 1;
         return {
@@ -216,11 +255,11 @@ function iniciarCosmosInfinito(targetDocument = document) {
             vy: 0.12,
             angulo: 0,
             corCabeca: '254, 240, 138',
-            corCauda: '192, 132, 252'
+            corCauda: '192, 132, 252',
+            prevRect: null
         };
     }
 
-    // COMETA 2: Viajante da Tela Toda
     function criarCometaTelaToda(direcao) {
         const indoEsq = direcao === 1;
         return {
@@ -232,7 +271,8 @@ function iniciarCosmosInfinito(targetDocument = document) {
             vy: 0.85,
             angulo: 0,
             corCabeca: '125, 211, 252',
-            corCauda: '56, 189, 248'
+            corCauda: '56, 189, 248',
+            prevRect: null
         };
     }
 
@@ -241,30 +281,41 @@ function iniciarCosmosInfinito(targetDocument = document) {
 
     function animar(timestamp) {
         requestAnimationFrame(animar);
-        if (timestamp - ultimoFrame < 32) return; // 30 FPS cravados (~1% CPU)
+        if (document.hidden) return; // Pausa 100% quando a aba está oculta!
+        if (timestamp - ultimoFrame < 33) return; // 30 FPS leves só nos 2 cometas
         ultimoFrame = timestamp;
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(staticStarsCanvas, 0, 0);
+        // Limpa APENAS o retângulo anterior de cada cometa (zero drawImage de tela cheia!)
+        for (let i = 0; i < cometas.length; i++) {
+            const r = cometas[i].prevRect;
+            if (r) ctx.clearRect(r.x, r.y, r.w, r.h);
+        }
 
         cometas.forEach((c, idx) => {
             c.x += c.vx;
             c.y += c.vy;
-            c.angulo += 0.12; // Gira suavemente a estrelinha da ponta do cometa!
+            c.angulo += 0.12;
 
             if (c.tipo === 'topo') {
                 if ((c.vx < 0 && c.x < -110) || (c.vx > 0 && c.x > canvas.width + 110)) {
                     cometas[idx] = criarCometaTopo(c.direcao * -1);
+                    return;
                 }
             } else {
                 if ((c.vx < 0 && c.x < -120) || (c.vx > 0 && c.x > canvas.width + 120) || c.y > canvas.height + 100) {
                     cometas[idx] = criarCometaTelaToda(c.direcao * -1);
+                    return;
                 }
             }
 
-            // Cauda alongada e suave
             const tailX = c.x - c.vx * 22;
             const tailY = c.y - c.vy * 22;
+
+            const minX = Math.min(c.x, tailX) - 14;
+            const minY = Math.min(c.y, tailY) - 14;
+            const maxX = Math.max(c.x, tailX) + 14;
+            const maxY = Math.max(c.y, tailY) + 14;
+            c.prevRect = { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
 
             const grad = ctx.createLinearGradient(c.x, c.y, tailX, tailY);
             grad.addColorStop(0, '#ffffff');
@@ -280,7 +331,6 @@ function iniciarCosmosInfinito(targetDocument = document) {
             ctx.lineCap = 'round';
             ctx.stroke();
 
-            // Ponta do cometa: Estrela de 4 pontas girando (Sem shadowBlur pesado!)
             ctx.save();
             ctx.translate(c.x, c.y);
             ctx.rotate(c.angulo);
@@ -420,17 +470,62 @@ function renderizarPillsCategorias() {
     });
 }
 
+let _timerDebounceBusca = null;
+let _timerDebounceVars = null;
+
+function capitalizarNomeCliente(str) {
+    if (!str) return "";
+    const conectores = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
+    return str.trim().split(/\s+/).map((palavra, idx) => {
+        const lower = palavra.toLowerCase();
+        if (idx > 0 && conectores.has(lower)) return lower;
+        return lower.charAt(0).toUpperCase() + lower.slice(1);
+    }).join(' ');
+}
+
+function aoDigitarVariavelPersonalizacao() {
+    clearTimeout(_timerDebounceVars);
+    _timerDebounceVars = setTimeout(() => {
+        const doc = (typeof obterDocAtivo === 'function') ? obterDocAtivo() : document;
+        const inputNome = doc.getElementById('var-nome') || document.getElementById('var-nome');
+        if (inputNome && inputNome.value.trim()) {
+            const pos = inputNome.selectionStart;
+            const cap = capitalizarNomeCliente(inputNome.value);
+            if (inputNome.value.trim() !== cap && !inputNome.value.endsWith(' ')) {
+                inputNome.value = cap;
+                try { inputNome.setSelectionRange(pos, pos); } catch (e) {}
+            }
+        }
+        // Atualiza apenas os previews dos cards já visíveis (zero reconstrução de DOM!)
+        if (!modoCompacto) {
+            idsVisiveisNoMomento.forEach(id => {
+                const item = listaScripts.find(s => s.id === id);
+                const elBody = doc.getElementById(`body-preview-${id}`);
+                if (item && elBody) {
+                    elBody.innerHTML = processarTexto(item.texto, true);
+                }
+            });
+        }
+    }, 80);
+}
+
 function aoDigitarBusca() {
-    const val = document.getElementById('busca-rapida').value;
-    document.getElementById('btn-limpar-busca').style.display = val ? 'flex' : 'none';
+    const doc = (typeof obterDocAtivo === 'function') ? obterDocAtivo() : document;
+    const val = (doc.getElementById('busca-rapida') || document.getElementById('busca-rapida'))?.value || '';
+    const btnLimpar = doc.getElementById('btn-limpar-busca') || document.getElementById('btn-limpar-busca');
+    if (btnLimpar) btnLimpar.style.display = val ? 'flex' : 'none';
     indiceFocadoTeclado = 0;
-    renderizarCards();
+    clearTimeout(_timerDebounceBusca);
+    _timerDebounceBusca = setTimeout(() => renderizarCards(), 85);
 }
 
 function limparBuscaRapida() {
-    const input = document.getElementById('busca-rapida');
+    const doc = (typeof obterDocAtivo === 'function') ? obterDocAtivo() : document;
+    const input = doc.getElementById('busca-rapida') || document.getElementById('busca-rapida');
+    if (!input) return;
     input.value = '';
-    document.getElementById('btn-limpar-busca').style.display = 'none';
+    const btnLimpar = doc.getElementById('btn-limpar-busca') || document.getElementById('btn-limpar-busca');
+    if (btnLimpar) btnLimpar.style.display = 'none';
     indiceFocadoTeclado = 0;
     renderizarCards();
     input.focus();
@@ -444,7 +539,7 @@ function renderizarCards() {
     grid.className = `cards-grid ${modoCompacto ? 'modo-compacto' : ''}`;
     const btnTxt = doc.getElementById('txt-view-mode');
     if (btnTxt) btnTxt.innerText = modoCompacto ? "Expandir" : "Compactar";
-    const busca = (document.getElementById('busca-rapida')?.value || "").toLowerCase().trim();
+    const busca = ((doc.getElementById('busca-rapida') || document.getElementById('busca-rapida'))?.value || "").toLowerCase().trim();
 
     let filtrados = listaScripts.filter(item => item.categoria !== 'Prompts IA').filter(item => {
         if (categoriaAtiva === 'Favoritos' && !item.favorito) return false;
@@ -466,17 +561,17 @@ function renderizarCards() {
     idsVisiveisNoMomento = filtrados.map(f => f.id);
     if (indiceFocadoTeclado >= idsVisiveisNoMomento.length) indiceFocadoTeclado = 0;
 
-    grid.innerHTML = '';
+    const frag = doc.createDocumentFragment();
 
     filtrados.forEach((item, index) => {
-        const previewHtml = processarTexto(item.texto, true);
+        const previewHtml = modoCompacto ? '' : processarTexto(item.texto, true);
         const atalhoTag = item.atalho ? `<span class="shortcut-code">${item.atalho}</span>` : '';
         const isFocado = (busca !== '' && index === indiceFocadoTeclado) ? 'teclado-focado' : '';
 
-        const card = document.createElement('div');
+        const card = doc.createElement('div');
         card.id = `card-resp-${item.id}`;
         card.className = `glass-card response-card ${item.favorito ? 'pinned' : ''} ${isFocado}`;
-        card.title = "Clique para copiar";
+        card.setAttribute('data-tip', 'Clique para copiar');
 
         card.onclick = () => copiarScriptPorId(item.id);
         card.oncontextmenu = (e) => {
@@ -491,52 +586,65 @@ function renderizarCards() {
                     <span class="card-title">${item.titulo}</span>
                 </div>
                 <div class="card-mini-actions" onclick="event.stopPropagation()">
-                    <button id="btn-inline-${item.id}" class="icon-btn" title="Editar somente o texto aqui na caixinha" onclick="toggleAjusteInline(${item.id})">
+                    <button id="btn-inline-${item.id}" class="icon-btn" data-tip="Editar somente o texto aqui na caixinha" onclick="toggleAjusteInline(${item.id})">
                         <span class="material-icons-round">edit_note</span>
                     </button>
-                    <button class="icon-btn ${item.favorito ? 'pin-active' : ''}" title="Fixar no topo" onclick="toggleFavorito(${item.id})">
+                    <button class="icon-btn ${item.favorito ? 'pin-active' : ''}" data-tip="Fixar no topo" onclick="toggleFavorito(${item.id})">
                         <span class="material-icons-round">push_pin</span>
                     </button>
-                    <button class="icon-btn" title="Editar título, atalho e resposta" onclick="editarScript(${item.id})">
+                    <button class="icon-btn" data-tip="Editar título, atalho e resposta" onclick="editarScript(${item.id})">
                         <span class="material-icons-round">edit</span>
                     </button>
-                    <button class="icon-btn" title="Excluir" onclick="excluirScript(${item.id})">
+                    <button class="icon-btn" data-tip="Excluir" onclick="excluirScript(${item.id})">
                         <span class="material-icons-round">delete</span>
                     </button>
                 </div>
             </div>
             <div class="card-body" id="body-preview-${item.id}">${previewHtml}</div>
-
-            <div id="box-tweak-${item.id}" class="inline-tweak-box" style="display: none;" onclick="event.stopPropagation()">
-                <textarea id="textarea-tweak-${item.id}" class="inline-tweak-area" rows="4"></textarea>
-                <div style="display: flex; gap: 6px;">
-                    <button class="btn-copy-tweak" style="flex: 1;" onclick="copiarScriptPorId(${item.id})">
-                        <span class="material-icons-round" style="font-size: 14px;">content_copy</span> COPIAR TEXTO
-                    </button>
-                    <button class="btn-reset-mini" title="Salvar alteração no texto padrão" onclick="salvarEdicaoInlinePermanente(${item.id})">
-                        <span class="material-icons-round" style="font-size: 14px; color: var(--neon-blue);">save</span>
-                    </button>
-                    <button class="btn-reset-mini" title="Fechar caixinha" onclick="toggleAjusteInline(${item.id})">
-                        <span class="material-icons-round" style="font-size: 14px;">close</span>
-                    </button>
-                </div>
-            </div>
         `;
-        grid.appendChild(card);
+        frag.appendChild(card);
     });
 
-    renderizarPrompts();
+    grid.innerHTML = '';
+    grid.appendChild(frag);
 }
 
 function toggleAjusteInline(id) {
     const item = listaScripts.find(s => s.id === id);
     if (!item) return;
 
-    const boxTweak = document.getElementById(`box-tweak-${id}`);
-    const bodyPreview = document.getElementById(`body-preview-${id}`);
-    const textarea = document.getElementById(`textarea-tweak-${id}`);
-    const btnIcon = document.getElementById(`btn-inline-${id}`);
+    const doc = (typeof obterDocAtivo === 'function') ? obterDocAtivo() : document;
+    const card = doc.getElementById(`card-resp-${id}`);
+    const bodyPreview = doc.getElementById(`body-preview-${id}`);
+    const btnIcon = doc.getElementById(`btn-inline-${id}`);
+    if (!card || !bodyPreview) return;
 
+    let boxTweak = doc.getElementById(`box-tweak-${id}`);
+    if (!boxTweak) {
+        // Criação sob demanda (lazy): evita 74 textareas ocultas no DOM!
+        boxTweak = doc.createElement('div');
+        boxTweak.id = `box-tweak-${id}`;
+        boxTweak.className = 'inline-tweak-box';
+        boxTweak.style.display = 'none';
+        boxTweak.onclick = (e) => e.stopPropagation();
+        boxTweak.innerHTML = `
+            <textarea id="textarea-tweak-${id}" class="inline-tweak-area" rows="4"></textarea>
+            <div style="display: flex; gap: 6px;">
+                <button class="btn-copy-tweak" style="flex: 1;" onclick="copiarScriptPorId(${id})">
+                    <span class="material-icons-round" style="font-size: 14px;">content_copy</span> COPIAR TEXTO
+                </button>
+                <button class="btn-reset-mini" data-tip="Salvar alteração no texto padrão" onclick="salvarEdicaoInlinePermanente(${id})">
+                    <span class="material-icons-round" style="font-size: 14px; color: var(--neon-blue);">save</span>
+                </button>
+                <button class="btn-reset-mini" data-tip="Fechar caixinha" onclick="toggleAjusteInline(${id})">
+                    <span class="material-icons-round" style="font-size: 14px;">close</span>
+                </button>
+            </div>
+        `;
+        card.appendChild(boxTweak);
+    }
+
+    const textarea = doc.getElementById(`textarea-tweak-${id}`);
     if (boxTweak.style.display === 'none') {
         textarea.value = processarTexto(item.texto, false);
         boxTweak.style.display = 'flex';
@@ -996,20 +1104,25 @@ function navegarBuscaTeclado(e) {
     }
 }
 
-document.addEventListener('keydown', (e) => {
-    if (e.altKey && e.key.toLowerCase() === 'l') {
-        e.preventDefault();
-        limparVariaveis();
-    }
-});
+// ==============================================================
+// 8. CRUD + SUPABASE (OTIMIZADO: 1 CHAVE + DEBOUNCE EM CONTADOR)
+// ==============================================================
+let _timerSaveCacheLocal = null;
 
-// ==============================================================
-// 8. CRUD + SUPABASE
-// ==============================================================
-function salvarNoCacheESupabase(itemModificado = null) {
-    ['sc_cockpit_scripts_v3', 'sc_cockpit_scripts_v4', 'sc_cockpit_scripts_v5'].forEach(k => {
-        localStorage.setItem(k, JSON.stringify(listaScripts));
-    });
+function salvarNoCacheESupabase(itemModificado = null, apenasContador = false) {
+    const persistirLocal = () => {
+        try {
+            localStorage.setItem('sc_cockpit_scripts_v5', JSON.stringify(listaScripts));
+        } catch (e) {}
+    };
+
+    if (apenasContador) {
+        clearTimeout(_timerSaveCacheLocal);
+        _timerSaveCacheLocal = setTimeout(persistirLocal, 600);
+    } else {
+        clearTimeout(_timerSaveCacheLocal);
+        persistirLocal();
+    }
 
     if (supabaseClient && itemModificado) {
         supabaseClient.from('sc_respostas_rapidas').upsert({
@@ -1526,7 +1639,10 @@ function sincronizarFuncoesParaJanelaPiP(pipWin) {
         'salvarRespostaGemNoDiario', 'atualizarCampoAcaoRapida', 'removerAcaoRapida',
         'adicionarNovaAcaoRapida', 'restaurarAcoesRapidasPadrao', 'salvarRascunhoHUD',
         'copiarRascunhoHUD', 'dispararAcaoRapidaPorIndice', 'restaurarTelaPrincipalDoPiP',
-        'mostrarToast'
+        'mostrarToast', 'aoDigitarVariavelPersonalizacao', 'detectarDadosClienteNoTexto',
+        'alternarModoVelocidadeGem', 'selecionarHistoricoGem', 'continuarAssuntoGem',
+        'refinarRespostaGem', 'selecionarAbaChecklist', 'copiarPerguntaChecklist',
+        'renderizarChecklistN1N2', 'renderizarHistoricoGemHUD', 'reagirAnjo'
     ];
 
     funcoesEssenciais.forEach(fnName => {
@@ -1619,7 +1735,7 @@ copiarScriptPorId = function(id) {
     copiarTextoUniversal(textoPronto);
 
     item.usos = (item.usos || 0) + 1;
-    salvarNoCacheESupabase(item);
+    salvarNoCacheESupabase(item, true);
 
     const cardEl = doc.getElementById(`card-resp-${id}`);
     if (cardEl) {
@@ -1627,6 +1743,7 @@ copiarScriptPorId = function(id) {
         setTimeout(() => cardEl.classList.remove('copiado-flash'), 400);
     }
 
+    if (typeof reagirAnjo === 'function') reagirAnjo('spark', 650);
     mostrarToast(`✓ Copiado: "${item.titulo}"`);
 };
 
@@ -1671,6 +1788,9 @@ function inicializarBarraCopilotHUD() {
                 <button type="button" class="btn-hud-action btn-hud-ai-gem" onclick="toggleGavetaHUD('hud-gemini-drawer')" data-tip="Abrir ou Fechar sua IA Gem conectada aos seus ${qtdCardsConhecimento} Cards">
                     <span class="material-icons-round" style="font-size:13px;">auto_awesome</span> IA Gem
                 </button>
+                <button type="button" class="btn-hud-action" onclick="toggleGavetaHUD('hud-checklist-drawer')" data-tip="Checklist rápido de triagem N1/N2 (App, Boleto, OFX, Portaria)">
+                    <span class="material-icons-round" style="font-size:13px; color:#38bdf8;">fact_check</span> Triagem N1/N2
+                </button>
                 <button type="button" class="btn-hud-action" onclick="higienizarDadoCopiado()" data-tip="Limpa pontos e traços de CPF, CNPJ ou Boleto do seu Ctrl+C">
                     <span class="material-icons-round" style="font-size:13px; color:#10b981;">cleaning_services</span> Limpar Nº
                 </button>
@@ -1694,6 +1814,9 @@ function inicializarBarraCopilotHUD() {
                     <span class="gem-brain-badge">
                         🧠 Cérebro Ativo: ${qtdCardsConhecimento} Cards Conectados
                     </span>
+                    <button type="button" id="btn-gem-speed-mode" class="btn-reset-mini" style="padding:2px 7px; font-size:9px; color:#6ee7b7; border-color:rgba(16,185,129,0.4);" onclick="alternarModoVelocidadeGem()" data-tip="Alternar entre Modo Ultra-Rápido (Streaming sem atraso) e Modo Analítico">
+                        ${(localStorage.getItem('sc_gem_speed_mode') || 'veloz') === 'veloz' ? '⚡ Modo Ultra-Rápido' : '🧠 Modo Analítico'}
+                    </button>
                 </div>
                 <div style="display:flex; gap:4px; align-items:center;">
                     <button type="button" class="btn-reset-mini" style="padding:2px 6px; font-size:9px; color:#fde68a;" onclick="mudarAlturaCaixaGem()" data-tip="Alternar tamanho da caixa (Compacta / Média / Grande) — Salva após o F5!">
@@ -1705,6 +1828,9 @@ function inicializarBarraCopilotHUD() {
                     <button type="button" class="btn-reset-mini" style="padding:2px 6px; font-size:9.5px;" onclick="toggleGavetaHUD('hud-gemini-drawer')">✕</button>
                 </div>
             </div>
+
+            <!-- HISTÓRICO DAS ÚLTIMAS 5 RESPOSTAS DA IA GEM (CLICÁVEL!) -->
+            <div id="gem-hud-history-bar" class="gem-history-bar" style="display:none;"></div>
 
             <!-- Sub-caixa de Configuração da API Key -->
             <div id="box-config-apikey-hud" style="display:${configGeminiGem.apiKey ? 'none' : 'flex'}; flex-direction:column; gap:6px; background:rgba(15,23,42,0.95); padding:8px; border-radius:8px; border:1px dashed var(--neon-blue);">
@@ -1793,6 +1919,16 @@ function inicializarBarraCopilotHUD() {
             </div>
             <textarea id="hud-notes-textarea" rows="3" style="width:100%; resize:none; background:#040711; border:1px solid rgba(251,191,36,0.35); color:#fef08a; padding:6px 8px; border-radius:6px; font-size:11.5px; outline:none;" placeholder="Anote aqui e-mail do morador, unidade, protocolo ou observação..." oninput="salvarRascunhoHUD(this.value)"></textarea>
         </div>
+
+        <!-- GAVETA 4: CHECKLIST INTERATIVO N1/N2 (NO CLIQUE) -->
+        <div id="hud-checklist-drawer" class="hud-manager-drawer">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
+                <span style="font-size:9.5px; font-weight:800; color:#7dd3fc;">🛡️ CHECKLIST RÁPIDO N1/N2 (SEU CONDOMÍNIO):</span>
+                <button type="button" class="btn-reset-mini" style="padding:2px 6px; font-size:9px;" onclick="toggleGavetaHUD('hud-checklist-drawer')">✕</button>
+            </div>
+            <div id="checklist-tabs-container" class="checklist-tabs-row"></div>
+            <div id="checklist-steps-container" class="checklist-items-list"></div>
+        </div>
     `;
 
     const notaSalva = localStorage.getItem('sc_hud_quick_notes') || '';
@@ -1812,6 +1948,8 @@ function inicializarBarraCopilotHUD() {
 
     renderizarBotoesAcoesRapidas();
     renderizarEditorAcoesRapidas();
+    if (typeof renderizarChecklistN1N2 === 'function') renderizarChecklistN1N2();
+    if (typeof renderizarHistoricoGemHUD === 'function') renderizarHistoricoGemHUD();
 
     if (localStorage.getItem('sc_gem_aberta_estado') === 'true') {
         const gemDrawer = doc.getElementById('hud-gemini-drawer');
@@ -1889,7 +2027,7 @@ async function adicionarArquivoFisicoGem(file, urlOriginal = '') {
     const nome = file.name || `Print_${window.filaMidiasGemHUD.length + 1}.jpg`;
 
     if (mime.startsWith('image/')) {
-		const dataUrl = await comprimirImagemParaBase64(file, 1024, 0.75);
+        const dataUrl = await comprimirImagemParaBase64(file, 1400, 0.85);
         const b64 = dataUrl.split(',')[1];
         if (jaExisteMidiaNaFila(urlOriginal || dataUrl, b64)) return false;
 
@@ -2211,7 +2349,7 @@ async function dispararAcaoRapidaPorIndice(idx) {
 
 function toggleGavetaHUD(idGaveta) {
     const doc = obterDocAtivo();
-    ['hud-gemini-drawer', 'hud-qa-editor-drawer', 'hud-notes-drawer'].forEach(id => {
+    ['hud-gemini-drawer', 'hud-qa-editor-drawer', 'hud-notes-drawer', 'hud-checklist-drawer'].forEach(id => {
         const el = doc.getElementById(id);
         if (!el) return;
         if (id === idGaveta) {
@@ -2589,12 +2727,20 @@ function trocarModulo(mod) {
     }
     document.getElementById(`nav-${mod}`)?.classList.add('active');
 
+    // Renderização sob demanda: só atualiza a aba que realmente está aberta!
+    if (mod === 'prompts' && typeof renderizarPrompts === 'function') {
+        renderizarPrompts();
+    } else if (mod === 'chat' && typeof renderizarMensagensChat === 'function') {
+        renderizarMensagensChat(false);
+    }
+
     // Salva a página atual para permanecer nela ao dar F5!
     localStorage.setItem('sc_modulo_ativo', mod);
 }
 
 function mostrarToast(msg) {
     const container = document.getElementById('toast-container');
+    if (!container) return;
     const t = document.createElement('div');
     t.className = 'toast';
     t.innerHTML = `<span class="material-icons-round" style="color: var(--neon-green); font-size: 16px;">auto_awesome</span> <span>${msg}</span>`;
@@ -2603,7 +2749,7 @@ function mostrarToast(msg) {
 }
 
 // ==============================================================
-// MOTOR DE SOBREPOSIÇÃO ESTRELADA (MATA O TITLE BRANCO NATIVO)
+// MOTOR DE SOBREPOSIÇÃO ESTRELADA (GPU TRANSLATE3D • ZERO REFLOW!)
 // ==============================================================
 (function inicializarTooltipEstrelado() {
     let tipBox = document.getElementById('starry-tooltip');
@@ -2613,50 +2759,60 @@ function mostrarToast(msg) {
         document.body.appendChild(tipBox);
     }
 
-    document.addEventListener('mouseover', (e) => {
-        // Procura qualquer elemento com title ou data-tip
-        const el = e.target.closest('[title], [data-tip]');
-        if (!el) return;
+    let tipAtivo = false;
+    let tipWidth = 180;
+    let ultimoElTip = null;
 
-        // Se ainda tiver 'title' nativo, arranca na hora para o Windows não mostrar a caixa branca!
+    document.addEventListener('mouseover', (e) => {
+        const el = e.target.closest('[title], [data-tip]');
+        if (!el) {
+            if (tipAtivo) {
+                tipBox.classList.remove('visivel');
+                tipAtivo = false;
+                ultimoElTip = null;
+            }
+            return;
+        }
+
         if (el.hasAttribute('title')) {
             const txt = el.getAttribute('title');
             if (txt) el.setAttribute('data-tip', txt);
             el.removeAttribute('title');
         }
 
+        if (el === ultimoElTip && tipAtivo) return;
         const msg = el.getAttribute('data-tip');
         if (!msg) return;
 
+        ultimoElTip = el;
         tipBox.innerHTML = `<span class="tip-star">✦</span> <span>${msg}</span>`;
         tipBox.classList.add('visivel');
-    });
+        tipAtivo = true;
+        tipWidth = tipBox.offsetWidth || 180;
+    }, { passive: true });
 
     document.addEventListener('mousemove', (e) => {
-        if (!tipBox.classList.contains('visivel')) return;
-        const el = e.target.closest('[data-tip]');
-        if (!el) {
-            tipBox.classList.remove('visivel');
-            return;
-        }
-
-        // Posiciona suavemente acima do mouse sem sair da tela
+        if (!tipAtivo) return;
         let x = e.clientX + 12;
         let y = e.clientY - 36;
 
-        if (x + tipBox.offsetWidth > window.innerWidth - 10) {
-            x = window.innerWidth - tipBox.offsetWidth - 10;
+        if (x + tipWidth > window.innerWidth - 10) {
+            x = window.innerWidth - tipWidth - 10;
         }
         if (y < 10) y = e.clientY + 20;
 
-        tipBox.style.left = `${x}px`;
-        tipBox.style.top = `${y}px`;
-    });
+        tipBox.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    }, { passive: true });
 
     document.addEventListener('mouseout', (e) => {
-        const el = e.target.closest('[data-tip]');
-        if (el) tipBox.classList.remove('visivel');
-    });
+        if (!tipAtivo) return;
+        const rel = e.relatedTarget;
+        if (!rel || !rel.closest || !rel.closest('[data-tip]')) {
+            tipBox.classList.remove('visivel');
+            tipAtivo = false;
+            ultimoElTip = null;
+        }
+    }, { passive: true });
 })();
 
 // ==============================================================
@@ -2664,15 +2820,30 @@ function mostrarToast(msg) {
 // ==============================================================
 window.onload = () => {
     const salvo = JSON.parse(localStorage.getItem('sc_pensamentos_espirita'));
-    if (salvo && salvo[0]) {
-        document.getElementById('mantra-palavras').innerText = salvo[0].mantra;
-        document.getElementById('frase-espirita').innerText = salvo[0].frase;
+    const primeiro = (salvo && salvo[0]) ? salvo[0] : PENSAMENTOS_PADRAO[0];
+    if (primeiro) {
+        const elMantra = document.getElementById('mantra-palavras');
+        const elFrase = document.getElementById('frase-espirita');
+        const elAutor = document.getElementById('autor-espirita');
+        if (elMantra) elMantra.innerText = primeiro.mantra;
+        if (elFrase) elFrase.innerText = primeiro.frase;
+        if (elAutor) elAutor.innerText = primeiro.autor ? `— ${primeiro.autor}` : '';
     }
+    atualizarAuraHorarioHorizonte();
     iniciarCosmosInfinito();
     atualizarBadgeSaudacao();
     document.getElementById('txt-view-mode').innerText = modoCompacto ? "Expandir" : "Compactar";
     renderizarPillsCategorias();
     renderizarCards();
+
+    if (typeof inicializarPortalAnjoHolografico === 'function') {
+        inicializarPortalAnjoHolografico();
+    }
+
+    // Pré-aquece lista de modelos da API Key em segundo plano para a 1ª resposta sair instantânea!
+    if (configGeminiGem?.apiKey && typeof obterModelosReaisDaChave === 'function') {
+        obterModelosReaisDaChave(configGeminiGem.apiKey).catch(() => {});
+    }
 
     // Restaura a aba exata em que você estava antes de apertar F5!
     const moduloSalvo = localStorage.getItem('sc_modulo_ativo') || 'atendimento';
@@ -3309,13 +3480,30 @@ function renderizarTabelaExtraida() {
         return;
     }
 
-    tbody.innerHTML = '';
+    // Validação visual: detecta unidades vazias/duplicadas, CPF/CNPJ com dígitos inválidos e e-mail malformado
+    const contagemUnid = new Map();
+    linhasProntasParaSistema.forEach(l => {
+        const key = `${(l.unidade || '').trim().toUpperCase()}|${l.unidadeTipo}`;
+        contagemUnid.set(key, (contagemUnid.get(key) || 0) + 1);
+    });
+
+    const frag = document.createDocumentFragment();
     visiveis.forEach((linha, idx) => {
         const tr = document.createElement('tr');
         const badgeClass = linha.unidadeTipo === 'Proprietário' ? 'badge-tipo-prop' : 'badge-tipo-mor';
 
+        const unidLimpa = (linha.unidade || '').trim();
+        const unidDuplicada = unidLimpa && (contagemUnid.get(`${unidLimpa.toUpperCase()}|${linha.unidadeTipo}`) > 1);
+        const clsUnid = (!unidLimpa || unidDuplicada) ? 'etl-cell-warn' : '';
+
+        const cpfDigitos = (linha.cpfCnpj || '').replace(/\D/g, '');
+        const clsCpf = (cpfDigitos && cpfDigitos.length !== 11 && cpfDigitos.length !== 14) ? 'etl-cell-warn' : '';
+
+        const emailVal = (linha.email || '').trim();
+        const clsEmail = (emailVal && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) ? 'etl-cell-err' : '';
+
         tr.innerHTML = `
-            <td><span class="unid-pill" contenteditable="true" onblur="atualizarCelulaETL(${idx}, 'unidade', this.innerText)">${linha.unidade}</span></td>
+            <td><span class="unid-pill ${clsUnid}" contenteditable="true" onblur="atualizarCelulaETL(${idx}, 'unidade', this.innerText)" ${unidDuplicada ? 'data-tip="Atenção: mesma unidade + tipo duplicada"' : ''}>${linha.unidade}</span></td>
             <td></td>
             <td><span class="${badgeClass}">${linha.unidadeTipo}</span></td>
             <td>${linha.principal}</td>
@@ -3323,8 +3511,8 @@ function renderizarTabelaExtraida() {
             <td>${linha.responsavel}</td>
             <td>${linha.locatario}</td>
             <td contenteditable="true" style="font-weight: 700; color: white;" onblur="atualizarCelulaETL(${idx}, 'nome', this.innerText)">${linha.nome}</td>
-            <td contenteditable="true" style="font-family: monospace;" onblur="atualizarCelulaETL(${idx}, 'cpfCnpj', this.innerText)">${linha.cpfCnpj}</td>
-            <td contenteditable="true" style="color: #93c5fd;" onblur="atualizarCelulaETL(${idx}, 'email', this.innerText)">${linha.email}</td>
+            <td class="${clsCpf}" contenteditable="true" style="font-family: monospace;" onblur="atualizarCelulaETL(${idx}, 'cpfCnpj', this.innerText)" ${clsCpf ? 'data-tip="CPF/CNPJ com quantidade de dígitos incomum"' : ''}>${linha.cpfCnpj}</td>
+            <td class="${clsEmail}" contenteditable="true" style="color: #93c5fd;" onblur="atualizarCelulaETL(${idx}, 'email', this.innerText)" ${clsEmail ? 'data-tip="E-mail parece incompleto ou inválido"' : ''}>${linha.email}</td>
             <td contenteditable="true" onblur="atualizarCelulaETL(${idx}, 'telefones', this.innerText)">${linha.telefones}</td>
             <td>
                 <button class="icon-btn" onclick="removerLinhaETL(${idx})" data-tip="Remover esta linha">
@@ -3332,8 +3520,10 @@ function renderizarTabelaExtraida() {
                 </button>
             </td>
         `;
-        tbody.appendChild(tr);
+        frag.appendChild(tr);
     });
+    tbody.innerHTML = '';
+    tbody.appendChild(frag);
 }
 
 function atualizarCelulaETL(idx, campo, valor) {
@@ -3913,6 +4103,8 @@ function alternarAlturaEditorChat() {
 
 function verificarBarraFlutuanteSelecao() {
     if (bloqueioBarraFlutuante) return;
+    const modChat = document.getElementById('modulo-chat');
+    if (!modChat || modChat.style.display === 'none') return;
     const bar = document.getElementById('rich-floating-toolbar');
     const editor = obterEditorRico();
     if (!bar || !editor) return;
@@ -4316,6 +4508,7 @@ function renderizarMensagensChat(rolarParaFim = false) {
         return;
     }
 
+    const fragChat = document.createDocumentFragment();
     visiveis.forEach(msg => {
         const { dataLimpa, cor } = extrairCorEData(msg);
         const midias = obterListaMidiasDaMensagem(msg);
@@ -4329,7 +4522,7 @@ function renderizarMensagensChat(rolarParaFim = false) {
             const singleClass = midias.length === 1 ? 'single-item' : '';
             const itensHtml = midias.map(m => {
                 if (m.tipo === 'imagem') {
-                    return `<div class="chat-media-item"><img src="${m.url}" alt="${m.nome || 'Print'}" onclick="abrirLightboxChat('${m.url}')" data-tip="Clique para ampliar em tela cheia"></div>`;
+                    return `<div class="chat-media-item"><img src="${m.url}" alt="${m.nome || 'Print'}" loading="lazy" decoding="async" onclick="abrirLightboxChat('${m.url}')" data-tip="Clique para ampliar em tela cheia"></div>`;
                 } else if (m.tipo === 'video') {
                     return `<div class="chat-media-item"><video src="${m.url}" controls preload="metadata"></video></div>`;
                 } else {
@@ -4365,8 +4558,9 @@ function renderizarMensagensChat(rolarParaFim = false) {
                 ${msg.texto ? `<div class="chat-text-content" style="white-space: normal;">${formatarConteudoBalaoChat(msg.texto, msg.id)}</div>` : ''}
             </div>
         `;
-        stream.appendChild(row);
+        fragChat.appendChild(row);
     });
+    stream.appendChild(fragChat);
 
     if (rolarParaFim) {
         stream.scrollTop = stream.scrollHeight;
@@ -4810,11 +5004,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 // ==============================================================
-// ==============================================================
-// 11. MOTOR GEMINI CALIBRADO: 1ª PESSOA + LEITURA TOTAL + TONS PRECISOS
+// 11. MOTOR GEMINI ULTRA-RÁPIDO (STREAMING + ZERO-THINKING + HISTÓRICO 5 + CONTINUIDADE)
 // ==============================================================
 
-// Relógio instantâneo do Planetário
+// Relógio instantâneo do Portal
 function iniciarRelogioPlanetario() {
     const atualizarRelogioEstelar = () => {
         const el = document.getElementById('obs-live-clock');
@@ -4835,14 +5028,42 @@ limparCaixaGemHUD = function() {
     _oldLimparCaixaGem();
 };
 
-// 1. CÉREBRO COMPLETO E PRECISO: Prioriza os Cards mais relevantes para a dúvida + Anotações Fixadas do Diário!
+// Estado de velocidade, histórico das últimas 5 respostas e conversa ativa
+window.modoVelocidadeGem = localStorage.getItem('sc_gem_speed_mode') || 'veloz';
+window.historicoRespostasGem = (() => {
+    try { return JSON.parse(sessionStorage.getItem('sc_gem_hist_5') || '[]'); } catch (e) { return []; }
+})();
+window.idHistoricoGemAtivo = null;
+window.ultimoModeloUsadoGem = '';
+
+function salvarHistoricoGemSessao() {
+    try {
+        sessionStorage.setItem('sc_gem_hist_5', JSON.stringify(window.historicoRespostasGem.slice(0, 5)));
+    } catch (e) {}
+}
+
+window.alternarModoVelocidadeGem = function() {
+    window.modoVelocidadeGem = (window.modoVelocidadeGem === 'veloz') ? 'analitico' : 'veloz';
+    localStorage.setItem('sc_gem_speed_mode', window.modoVelocidadeGem);
+    listaModelosReaisCache = null; // Recalcula ordem de modelos
+    const doc = obterDocAtivo();
+    const btn = doc.getElementById('btn-gem-speed-mode');
+    if (btn) {
+        btn.innerText = window.modoVelocidadeGem === 'veloz' ? '⚡ Modo Ultra-Rápido' : '🧠 Modo Analítico';
+    }
+    mostrarToast(window.modoVelocidadeGem === 'veloz'
+        ? '⚡ Modo Ultra-Rápido ativado (resposta instantânea via streaming)!'
+        : '🧠 Modo Analítico ativado (raciocínio mais profundo)!');
+};
+
+// 1. CÉREBRO COMPACTO E PRECISO: Top 8 cards mais certeiros + Anotações Fixadas (muito mais rápido!)
 compilarCerebroCompletoCockpit = function(textoPergunta = "") {
     const cardsAtendimento = listaScripts.filter(s => s.categoria !== 'Prompts IA');
     const palavrasChave = textoPergunta
         .toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
         .split(/\W+/)
-        .filter(p => p.length > 2 && !['para', 'como', 'que', 'uma', 'com', 'por', 'nao', 'está', 'esta', 'cliente', 'visitante'].includes(p));
+        .filter(p => p.length > 2 && !['para', 'como', 'que', 'uma', 'com', 'por', 'nao', 'esta', 'cliente', 'visitante', 'ola', 'bom', 'boa', 'dia', 'tarde', 'noite'].includes(p));
 
     const cardsPontuados = cardsAtendimento.map(card => {
         const conteudoCard = `${card.categoria} ${card.titulo} ${card.atalho || ''} ${card.texto}`
@@ -4850,40 +5071,38 @@ compilarCerebroCompletoCockpit = function(textoPergunta = "") {
             .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
         let pontos = card.favorito ? 2 : 0;
-        palavrasChave.forEach(p => {
-            if (conteudoCard.includes(p)) pontos += 6;
-        });
+        for (let i = 0; i < palavrasChave.length; i++) {
+            if (conteudoCard.includes(palavrasChave[i])) pontos += 6;
+        }
         return { card, pontos };
     });
 
     cardsPontuados.sort((a, b) => b.pontos - a.pontos);
 
-    // Envia os 18 cards mais certeiros (ou todos se a base for pequena) para precisão cirúrgica
-    const selecionados = cardsPontuados.slice(0, 18).map((item, idx) => {
+    // Top 8 cards mais relevantes: mantém precisão cirúrgica e corta pela metade o tempo de resposta!
+    const limiteCards = window.modoVelocidadeGem === 'veloz' ? 8 : 14;
+    const selecionados = cardsPontuados.slice(0, limiteCards).map((item, idx) => {
         const s = item.card;
         return `${idx + 1}. [${s.categoria} | ${s.titulo}]: ${processarTexto(s.texto, false)}`;
     }).join('\n\n');
 
     let notasFixadasDiario = "";
     if (typeof listaChatPessoal !== 'undefined' && Array.isArray(listaChatPessoal)) {
-        const fixadas = listaChatPessoal.filter(m => m.fixado && m.texto);
+        const fixadas = listaChatPessoal.filter(m => m.fixado && m.texto).slice(0, 6);
         if (fixadas.length > 0) {
-            notasFixadasDiario = `\n\n=== ANOTAÇÕES FIXADAS NO DIÁRIO DO RICARDO ===\n` +
+            notasFixadasDiario = `\n\n=== ANOTAÇÕES FIXADAS ===\n` +
                 fixadas.map(f => {
                     const tmp = document.createElement('div');
                     tmp.innerHTML = f.texto;
-                    return `• ${tmp.innerText || tmp.textContent}`;
+                    return `• ${(tmp.innerText || tmp.textContent || '').trim()}`;
                 }).join('\n');
         }
     }
 
-    return `\n\n=== BASE OFICIAL DE PROCEDIMENTOS DO SUPORTE (USE EXATAMENTE ESTES CAMINHOS DE MENU QUANDO APLICÁVEL) ===\n${selecionados}${notasFixadasDiario}`;
+    return `\n\n=== PROCEDIMENTOS OFICIAIS DO SUPORTE (USE ESTES CAMINHOS QUANDO APLICÁVEL) ===\n${selecionados}${notasFixadasDiario}`;
 };
 
-// 2. DESCOBERTA AUTOMÁTICA DO MODELO MAIS RÁPIDO E INTELIGENTE DA SUA CONTA GOOGLE
-// ==============================================================
-// MOTOR GEMINI CALIBRADO PARA GERAÇÃO 3.5 FLASH-LITE / 4 HYDROGEN / 3.1 PRO
-// ==============================================================
+// 2. DESCOBERTA INTELIGENTE DE MODELOS (PRIORIZA OS MAIS RÁPIDOS NO MODO VELOZ)
 let listaModelosReaisCache = null;
 
 async function obterModelosReaisDaChave(apiKey) {
@@ -4897,44 +5116,43 @@ async function obterModelosReaisDaChave(apiKey) {
             const disponiveis = data.models
                 .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
                 .map(m => m.name.replace('models/', ''))
-                // Ignora os modelos antigos (1.5, 2.0, 2.5) que o Google bloqueou para contas novas
-                .filter(nome => (nome.includes('gemini') || nome.includes('hydrogen') || nome.includes('argon')) 
-                    && !nome.includes('1.5') 
-                    && !nome.includes('2.0') 
-                    && !nome.includes('2.5') 
-                    && !nome.includes('vision') 
-                    && !nome.includes('tts') 
-                    && !nome.includes('image') 
-                    && !nome.includes('embedding'));
+                .filter(nome => nome.includes('gemini') && !nome.includes('2.0') && !nome.includes('1.5') && !nome.includes('vision') && !nome.includes('tts') && !nome.includes('image') && !nome.includes('embedding'));
 
-            // Prioridade 1: 3.5 Flash Lite | Prioridade 2: 4 Hydrogen | Prioridade 3: 3.1 Pro Preview
+            const veloz = window.modoVelocidadeGem === 'veloz';
             disponiveis.sort((a, b) => {
                 const peso = (n) => {
-                    const nome = n.toLowerCase();
-                    if (nome.includes('3.5') && nome.includes('flash')) return 1; // 3.5 Flash Lite
-                    if (nome.includes('hydrogen') || nome.includes('gemini-4')) return 2; // 4 Hydrogen
-                    if (nome.includes('3.1-pro')) return 3; // 3.1 Pro Preview
-                    if (nome.includes('flash-lite')) return 4;
-                    if (nome.includes('flash')) return 5;
-                    if (nome.includes('3.1') || nome.includes('3.5')) return 6;
-                    return 9;
+                    if (veloz) {
+                        if (n.includes('3.5-flash-lite')) return 1;
+                        if (n.includes('3.6-flash')) return 2;
+                        if (n.includes('3.8-flash')) return 3;
+                        if (n.includes('flash-lite')) return 4;
+                        if (n.includes('2.5-flash') && !n.includes('pro')) return 5;
+                        if (n.includes('flash')) return 6;
+                        return 9;
+                    } else {
+                        if (n.includes('3.8-flash')) return 1;
+                        if (n.includes('3.6-flash')) return 2;
+                        if (n.includes('2.5-flash') && !n.includes('lite')) return 3;
+                        if (n.includes('flash') && !n.includes('lite')) return 4;
+                        if (n.includes('flash-lite')) return 5;
+                        return 9;
+                    }
                 };
                 return peso(a) - peso(b);
             });
 
-            console.log("🚀 Modelos ativos encontrados na sua conta:", disponiveis);
-
             if (disponiveis.length > 0) {
-                listaModelosReaisCache = disponiveis.slice(0, 4);
+                const extras = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'].filter(m => !disponiveis.includes(m));
+                listaModelosReaisCache = [...disponiveis.slice(0, 5), ...extras].slice(0, 6);
                 return listaModelosReaisCache;
             }
         }
     } catch (e) {}
-    // Fallback direto para os modelos novos da sua conta
-    return ['gemini-3.5-flash-lite', 'gemini-3.5-flash-lite-preview', 'gemini-3.1-pro-preview'];
+    return ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
 }
 
-chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true) {
+// 3. MOTOR DE STREAMING SSE + ZERO-THINKING BUDGET (RESPOSTA COMEÇA EM ~0.8s!)
+chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true, opcoes = {}) {
     if (!configGeminiGem.apiKey) {
         toggleGavetaHUD('hud-gemini-drawer');
         const doc = obterDocAtivo();
@@ -4943,6 +5161,7 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
         throw new Error("Configure sua Chave de API do Gemini primeiro!");
     }
 
+    const { onChunk = null, historicoContents = null } = opcoes;
     const doc = obterDocAtivo();
     const nomeCliente = doc.getElementById('var-nome')?.value.trim() || '';
     const nomeCond = doc.getElementById('var-condominio')?.value.trim() || '';
@@ -4951,163 +5170,681 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true)
     const cerebroOtimizado = usarContextoScripts ? compilarCerebroCompletoCockpit(promptUsuario) : "";
     const contextoVariaveis = `\n\n=== DADOS DO ATENDIMENTO ATUAL ===\nSaudação do horário: "${saudacao}" | Nome do Cliente: "${nomeCliente || 'Não informado'}" | Condomínio: "${nomeCond || 'Não informado'}"`;
 
-    const userParts = [];
-    let textosDeArquivos = "";
+    let contentsPayload;
+    if (Array.isArray(historicoContents) && historicoContents.length > 0) {
+        contentsPayload = historicoContents;
+    } else {
+        const userParts = [];
+        let textosDeArquivos = "";
 
-    for (const item of window.filaMidiasGemHUD) {
-        if (item.tipoCurto === 'texto' && item.textoExtraido) {
-            textosDeArquivos += `\n\n--- CONTEÚDO DO ARQUIVO ANEXADO (${item.nome}) ---\n${item.textoExtraido}`;
-        } else if (item.base64Data) {
-            const base64Puro = item.base64Data.includes(',') ? item.base64Data.split(',')[1] : item.base64Data;
-            userParts.push({
-                inlineData: {
-                    mimeType: item.mimeType || 'image/jpeg',
-                    data: base64Puro
-                }
-            });
+        for (const item of window.filaMidiasGemHUD) {
+            if (item.tipoCurto === 'texto' && item.textoExtraido) {
+                textosDeArquivos += `\n\n--- ARQUIVO (${item.nome}) ---\n${item.textoExtraido}`;
+            } else if (item.base64Data) {
+                userParts.push({
+                    inlineData: {
+                        mimeType: item.mimeType || 'image/jpeg',
+                        data: item.base64Data
+                    }
+                });
+            }
         }
+        userParts.push({ text: promptUsuario + textosDeArquivos });
+        contentsPayload = [{ role: "user", parts: userParts }];
     }
-
-    userParts.push({ text: promptUsuario + textosDeArquivos });
 
     const modelosParaTentar = await obterModelosReaisDaChave(configGeminiGem.apiKey);
     let ultimoErro = null;
+    const isVeloz = window.modoVelocidadeGem === 'veloz';
+
+    const montarPayload = (incluirThinkingConfig) => {
+        const genCfg = {
+            temperature: 0.25,
+            maxOutputTokens: isVeloz ? 1100 : 1800
+        };
+        // Desativa tokens de pensamento oculto no modo veloz (principal causa de demora nos Gemini 2.5/3.x!)
+        if (incluirThinkingConfig && isVeloz) {
+            genCfg.thinkingConfig = { thinkingBudget: 0 };
+        }
+        return {
+            systemInstruction: {
+                parts: [{ text: INSTRUCAO_PROFISSIONAL_RICARDO + "\n" + (configGeminiGem.instrucaoGem || "") + contextoVariaveis + cerebroOtimizado }]
+            },
+            contents: contentsPayload,
+            generationConfig: genCfg
+        };
+    };
 
     for (const mod of modelosParaTentar) {
-        const controller = new AbortController();
-        const timerTimeout = setTimeout(() => controller.abort(), 120000); // 120s para ler até 10 prints com folga
+        for (const tentarSemThinking of [false, true]) {
+            if (tentarSemThinking && !isVeloz) break;
 
-        try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:generateContent?key=${encodeURIComponent(configGeminiGem.apiKey)}`;
+            const controller = new AbortController();
+            const timerTimeout = setTimeout(() => controller.abort(), 45000);
 
-            const payload = {
-                systemInstruction: {
-                    parts: [{ text: INSTRUCAO_PROFISSIONAL_RICARDO + "\n" + (configGeminiGem.instrucaoGem || "") + contextoVariaveis + cerebroOtimizado }]
-                },
-                contents: [{ role: "user", parts: userParts }],
-                generationConfig: {
-                    temperature: 0.2,
-                    maxOutputTokens: 8192 // Garante que o passo a passo saia 100% completo sem cortar!
+            try {
+                const usarStream = typeof onChunk === 'function';
+                const endpoint = usarStream ? 'streamGenerateContent?alt=sse&' : 'generateContent?';
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${mod}:${endpoint}key=${encodeURIComponent(configGeminiGem.apiKey)}`;
+
+                const resp = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(montarPayload(!tentarSemThinking)),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timerTimeout);
+
+                if (!resp.ok) {
+                    const errData = await resp.json().catch(() => ({}));
+                    const errMsg = errData.error?.message || `HTTP ${resp.status}`;
+                    // Se o modelo não aceita thinkingConfig, tenta imediatamente sem ele!
+                    if (!tentarSemThinking && /thinking/i.test(errMsg)) {
+                        continue;
+                    }
+                    ultimoErro = errMsg;
+                    break;
                 }
-            };
-            
-            const resp = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-                signal: controller.signal
-            });
 
-            clearTimeout(timerTimeout);
-            const data = await resp.json();
+                window.ultimoModeloUsadoGem = mod;
 
-            if (resp.ok) {
-                const textoGerado = data.candidates?.[0]?.content?.parts
-                    ?.filter(p => !p.thought)
-                    ?.map(p => p.text || '')
-                    .join('')?.trim();
+                if (usarStream && resp.body) {
+                    const reader = resp.body.getReader();
+                    const decoder = new TextDecoder('utf-8');
+                    let buffer = '';
+                    let textoAcumulado = '';
 
-                if (textoGerado) {
-                    return textoGerado;
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        buffer += decoder.decode(value, { stream: true });
+                        const linhas = buffer.split('\n');
+                        buffer = linhas.pop() || '';
+
+                        for (const linha of linhas) {
+                            const l = linha.trim();
+                            if (!l.startsWith('data:')) continue;
+                            const jsonStr = l.slice(5).trim();
+                            if (!jsonStr || jsonStr === '[DONE]') continue;
+                            try {
+                                const chunk = JSON.parse(jsonStr);
+                                const parts = chunk.candidates?.[0]?.content?.parts || [];
+                                for (const p of parts) {
+                                    if (!p.thought && p.text) {
+                                        textoAcumulado += p.text;
+                                        onChunk(textoAcumulado);
+                                    }
+                                }
+                            } catch (e) {}
+                        }
+                    }
+                    if (textoAcumulado.trim()) {
+                        return textoAcumulado.trim();
+                    }
+                } else {
+                    const data = await resp.json();
+                    const textoGerado = data.candidates?.[0]?.content?.parts
+                        ?.filter(p => !p.thought)
+                        ?.map(p => p.text || '')
+                        .join('')?.trim();
+                    if (textoGerado) return textoGerado;
                 }
+            } catch (err) {
+                clearTimeout(timerTimeout);
+                ultimoErro = err.name === 'AbortError' ? "Tempo limite esgotado." : err.message;
+                break;
             }
-            ultimoErro = data.error?.message || `Erro no modelo ${mod}.`;
-        } catch (err) {
-            clearTimeout(timerTimeout);
-            ultimoErro = err.name === 'AbortError' ? "Tempo limite esgotado (timeout)." : err.message;
         }
     }
 
     throw new Error(`Falha na API: ${ultimoErro}`);
 };
 
-// 4. EXECUÇÃO CALIBRADA COM OS 5 TONS E LEITURA INTEGRAL DA CONVERSA + MÍDIAS
+function formatarHtmlRespostaGem(textoBruto) {
+    return (textoBruto || '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
+function renderizarHistoricoGemHUD() {
+    const doc = obterDocAtivo();
+    const bar = doc.getElementById('gem-hud-history-bar');
+    if (!bar) return;
+
+    if (!window.historicoRespostasGem || window.historicoRespostasGem.length === 0) {
+        bar.style.display = 'none';
+        bar.innerHTML = '';
+        return;
+    }
+
+    bar.style.display = 'flex';
+    bar.innerHTML = `<span style="font-size:8.5px; font-weight:900; color:#7dd3fc; margin-right:2px;">🕘 ÚLTIMAS ${window.historicoRespostasGem.length}:</span>`;
+
+    window.historicoRespostasGem.forEach((item, idx) => {
+        const btn = doc.createElement('button');
+        btn.type = 'button';
+        btn.className = `gem-history-chip ${item.id === window.idHistoricoGemAtivo ? 'active' : ''}`;
+        btn.setAttribute('data-tip', `${item.hora} • ${item.titulo} (Clique para reabrir e continuar assunto)`);
+        btn.innerText = `#${idx + 1} ${item.titulo}`;
+        btn.onclick = () => selecionarHistoricoGem(item.id);
+        bar.appendChild(btn);
+    });
+}
+
+function renderizarResultadoCompletoGem(itemHist) {
+    const doc = obterDocAtivo();
+    const outBox = doc.getElementById('gemini-hud-resultado');
+    if (!outBox || !itemHist) return;
+
+    ultimaRespostaGeradaGem = itemHist.resposta;
+    window.idHistoricoGemAtivo = itemHist.id;
+    const htmlVisual = formatarHtmlRespostaGem(itemHist.resposta);
+    const qtdTurnos = Math.max(1, Math.floor((itemHist.conversa?.length || 2) / 2));
+
+    outBox.style.display = 'flex';
+    outBox.innerHTML = `
+        <div class="gem-ans-header">
+            <div style="display:flex; align-items:center; gap:5px; flex-wrap:wrap;">
+                <strong style="color:var(--neon-green); font-size:10px;">⚡ PRONTO EM ${itemHist.segundos}s (COPIADO!)</strong>
+                <span class="gem-model-badge">${itemHist.modelo || 'gemini'}</span>
+                ${qtdTurnos > 1 ? `<span class="gem-model-badge" style="color:#f5d0fe; border-color:rgba(192,132,252,0.45);">💬 ${qtdTurnos} turnos</span>` : ''}
+            </div>
+            <button type="button" class="btn-gem-copy-big" onclick="copiarTextoUniversal(ultimaRespostaGeradaGem); mostrarToast('✓ Copiado pro Ctrl+V!')">
+                <span class="material-icons-round" style="font-size:14px;">content_copy</span>
+                COPIAR RESPOSTA
+            </button>
+        </div>
+        <div class="gem-ans-body" id="gem-stream-body">${htmlVisual}</div>
+        <div class="gem-refine-bar">
+            <span style="font-size:9px; font-weight:800; color:var(--text-muted);">REFINAR:</span>
+            <button type="button" class="gem-refine-chip" onclick="refinarRespostaGem('encurtar')">✂️ Encurtar</button>
+            <button type="button" class="gem-refine-chip" onclick="refinarRespostaGem('firme')">🛡️ Mais Firme</button>
+            <button type="button" class="gem-refine-chip" onclick="refinarRespostaGem('passos')">🔢 Em Passos</button>
+            <button type="button" class="gem-refine-chip" onclick="refinarRespostaGem('amigavel')">😊 Mais Leve</button>
+        </div>
+        <div class="gem-followup-row">
+            <input type="text" id="gem-followup-input" placeholder="💬 Continuar este assunto (ex: diga que o boleto vence amanhã, peça o print...)" onkeydown="if(event.key==='Enter'){event.preventDefault(); continuarAssuntoGem();}">
+            <button type="button" class="btn-hud-action btn-hud-ai-gem" style="padding:6px 10px;" onclick="continuarAssuntoGem()">
+                <span class="material-icons-round" style="font-size:13px;">send</span> Continuar
+            </button>
+        </div>
+    `;
+    renderizarHistoricoGemHUD();
+}
+
+window.selecionarHistoricoGem = function(id) {
+    const item = window.historicoRespostasGem.find(h => h.id === id);
+    if (!item) return;
+    renderizarResultadoCompletoGem(item);
+    copiarTextoUniversal(item.resposta).catch(() => {});
+    mostrarToast(`🕘 Histórico #${window.historicoRespostasGem.indexOf(item) + 1} reaberto e copiado!`);
+};
+
+// 4. EXECUÇÃO ULTRA-RÁPIDA COM STREAMING AO VIVO + REGISTRO DAS ÚLTIMAS 5
 executarGemNoHUD = async function(modo) {
-    const rodarTarefaSemPausar = async () => {
-        const doc = obterDocAtivo();
-        const input = doc.getElementById('gemini-hud-input');
-        const outBox = doc.getElementById('gemini-hud-resultado');
-        let texto = input?.value.trim() || "";
+    const doc = obterDocAtivo();
+    const input = doc.getElementById('gemini-hud-input');
+    const outBox = doc.getElementById('gemini-hud-resultado');
+    let texto = input?.value.trim() || "";
 
-        if (!texto && window.filaMidiasGemHUD.length === 0) {
-            return mostrarToast("Cole a conversa, print ou digite sua mensagem primeiro!");
-        }
+    if (!texto && window.filaMidiasGemHUD.length === 0) {
+        return mostrarToast("Cole a conversa, print ou digite sua mensagem primeiro!");
+    }
 
-        if (!texto && window.filaMidiasGemHUD.length > 0) {
-            texto = "Analise atentamente a(s) imagem(ns)/documento(s) anexado(s) e dê a resposta pronta para o cliente.";
-        }
+    if (!texto && window.filaMidiasGemHUD.length > 0) {
+        texto = "Analise atentamente a(s) imagem(ns)/documento(s) anexado(s) e dê a resposta pronta para o cliente.";
+    }
 
-        let segundos = 0;
-        outBox.style.display = 'block';
-        outBox.innerHTML = `<div class="gem-ans-body">⚡ <em id="gem-timer-txt">Lendo conversa${window.filaMidiasGemHUD.length ? ` + ${window.filaMidiasGemHUD.length} mídia(s)` : ''} e gerando resposta... (0s)</em></div>`;
+    // Reação do Anjo Holográfico!
+    if (modo === 'desabafo' || tomAtivoGem === 'firme') {
+        reagirAnjo('calm', 6000);
+    } else {
+        reagirAnjo('thinking', 0);
+    }
 
-        const relogioEspera = setInterval(() => {
-            segundos++;
-            const elTimer = doc.getElementById('gem-timer-txt');
-            if (elTimer) elTimer.innerText = `Lendo tudo e gerando resposta... (${segundos}s)`;
-        }, 1000);
+    const inicioMs = performance.now();
+    outBox.style.display = 'block';
+    outBox.innerHTML = `
+        <div class="gem-ans-header">
+            <strong style="color:#7dd3fc; font-size:10px;" id="gem-stream-status">⚡ Gerando resposta ao vivo...</strong>
+        </div>
+        <div class="gem-ans-body" id="gem-stream-body"><em>Conectando ao motor...</em></div>
+    `;
 
-        const instrucoesTom = {
-            curto: "TOM CURTO E DIRETO: Vá direto ao ponto em 1 a 3 frases curtas. Sem introduções desnecessárias.",
-            padrao: "TOM PADRÃO PROFISSIONAL: Equilibrado, claro, objetivo e prestativo, como um analista de suporte experiente.",
-            firme: "TOM CLIENTE DIFÍCIL (FIRME E SÊNIOR): Postura firme, segura, técnica e definitiva. Zero submissão, zero pedir desculpas, mas explicando o motivo técnico de forma incontestável.",
-            amigavel: "TOM AMIGÁVEL E HUMANO: Cordial, leve, prestativo e acolhedor, mas mantendo o foco total na solução rápida.",
-            passos: "TOM PASSO A PASSO: Estruture a orientação em passos numerados curtos e fáceis de seguir (1., 2., 3.)."
-        };
-
-        const regrasInviolaveisSaida = `
-REGRAS DE OURO PARA A SUA RESPOSTA:
-- Escreva em 1ª pessoa como o próprio atendente falando diretamente com o cliente.
-- PROIBIDO dizer "Sou o assistente do Ricardo", "Aqui é o Ricardo" ou fazer qualquer autoapresentação.
-- Ignore linhas de sistema do log copiado (como "Rascunho do assistente (modo sombra)", "Nota privada", horários isolados) e foque 100% na última dúvida/problema real do cliente e nas imagens/anexos enviados.
-- Entregue APENAS o texto final exato pronto para dar Ctrl+V no chat do cliente, sem aspas em volta e sem asteriscos (**).`;
-
-        try {
-            const diretrizTom = instrucoesTom[tomAtivoGem] || instrucoesTom.padrao;
-            let comando = "";
-            let precisaDosCards = true;
-
-            if (modo === 'raiox') {
-                comando = `Analise minuciosamente a(s) imagem(ns)/documento(s) anexado(s) junto com o histórico: "${texto}".
-Entregue em 2 blocos separados por "---":
-🔍 DIAGNÓSTICO DO PRINT/ARQUIVO: O que aparece na imagem (erro, tela, dados extraídos) e a causa técnica.
-💬 RESPOSTA PRONTA PARA O CLIENTE: A mensagem direta em 1ª pessoa pronta para colar no chat (seguindo o ${diretrizTom}, sem se apresentar e sem asteriscos **).`;
-            } else if (modo === 'desabafo') {
-                precisaDosCards = true;
-                comando = `Contexto/desabafo digitado pelo atendente sobre o caso:\n"${texto}"\n\nTransforme isso em uma resposta CURTA, DIRETA, FIRME E PROFISSIONAL (1 a 3 frases) escrita em 1ª pessoa diretamente para o cliente. Dê o recado técnico na lata, sem pedir desculpas, sem rodeios e sem se apresentar.${regrasInviolaveisSaida}`;
-            } else if (modo === 'lapidar') {
-                comando = `Rascunho ou explicação para lapidar:\n"${texto}"\n\nReescreva e lapide em 1ª pessoa com postura de Especialista Sênior (${diretrizTom}): clara, didática, direta ao ponto e consultando os Cards se precisar citar o caminho exato do menu.${regrasInviolaveisSaida}`;
-            } else if (modo === 'triagem') {
-                precisaDosCards = false;
-                comando = `Histórico recebido do cliente:\n"${texto}"\n\nAnalise o que o cliente já informou no texto/imagem acima e escreva APENAS 1 frase curta e direta em 1ª pessoa pedindo somente o dado que ainda falta para investigar no sistema (ex: condomínio, unidade, e-mail ou print da tela).${regrasInviolaveisSaida}`;
-            } else {
-                comando = `Histórico da conversa / mensagem do cliente:\n"${texto}"\n\n${ window.filaMidiasGemHUD.length > 0 ? `Há ${window.filaMidiasGemHUD.length} mídia(s)/print(s) anexado(s) — leia tudo o que está escrito na imagem para responder com precisão.` : '' }\n\nSiga rigorosamente o ${diretrizTom}.${regrasInviolaveisSaida}`;
-            }
-
-            const respostaBruta = await chamarMotorGeminiAPI(comando, precisaDosCards);
-            clearInterval(relogioEspera);
-
-            const respostaLimpaParaColar = respostaBruta.replace(/\*\*([^*]+)\*\*/g, '$1').trim();
-            ultimaRespostaGeradaGem = respostaLimpaParaColar;
-
-            copiarTextoUniversal(respostaLimpaParaColar).catch(() => {});
-
-            const htmlVisual = respostaBruta
-                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-
-            outBox.innerHTML = `<div class="gem-ans-header"><strong style="color:var(--neon-green); font-size:10px;">⚡ PRONTO EM ${segundos}s E COPIADO PRO CTRL+V!</strong><div style="display:flex; gap:4px;"><button type="button" class="btn-hud-action" style="padding:2px 6px; border-color:var(--neon-blue); color:#7dd3fc;" onclick="copiarTextoUniversal(ultimaRespostaGeradaGem); mostrarToast('✓ Copiado!')">Copiar</button><button type="button" class="btn-hud-action" style="padding:2px 6px; border-color:var(--neon-green); color:#6ee7b7;" onclick="transformarRespostaGemEmCard()">+ Virar Card</button><button type="button" class="btn-hud-action" style="padding:2px 6px; border-color:#f472b6; color:#f9a8d4;" onclick="salvarRespostaGemNoDiario()">Salvar Diário</button></div></div><div class="gem-ans-body">${htmlVisual}</div>`;
-
-            mostrarToast(`⚡ Resposta pronta em ${segundos}s e copiada!`);
-        } catch (err) {
-            clearInterval(relogioEspera);
-            outBox.innerHTML = `<div class="gem-ans-body" style="color:#f87171;">❌ ${err.message}</div>`;
-        }
+    const instrucoesTom = {
+        curto: "TOM CURTO E DIRETO: Vá direto ao ponto em 1 a 3 frases curtas. Sem introduções.",
+        padrao: "TOM PADRÃO PROFISSIONAL: Equilibrado, claro, objetivo e prestativo.",
+        firme: "TOM CLIENTE DIFÍCIL (FIRME E SÊNIOR): Postura firme, segura, técnica e definitiva. Zero submissão, zero desculpas.",
+        amigavel: "TOM AMIGÁVEL E HUMANO: Cordial, leve, prestativo e acolhedor, com foco na solução rápida.",
+        passos: "TOM PASSO A PASSO: Estruture a orientação em passos numerados curtos (1., 2., 3.)."
     };
 
-    if (navigator.locks && navigator.locks.request) {
-        await navigator.locks.request('sc_gem_background_exec', rodarTarefaSemPausar);
-    } else {
-        await rodarTarefaSemPausar();
+    const regrasInviolaveisSaida = `
+REGRAS DE OURO:
+- Escreva em 1ª pessoa como o próprio atendente falando diretamente com o cliente.
+- PROIBIDO dizer "Sou o assistente", "Aqui é o Ricardo" ou fazer autoapresentação.
+- Ignore linhas de sistema do log copiado e foque 100% na dúvida real do cliente e nos anexos.
+- Entregue APENAS o texto final pronto para dar Ctrl+V, sem aspas em volta e sem asteriscos (**).`;
+
+    try {
+        const diretrizTom = instrucoesTom[tomAtivoGem] || instrucoesTom.padrao;
+        let comando = "";
+        let precisaDosCards = true;
+
+        if (modo === 'raiox') {
+            comando = `Analise a(s) imagem(ns)/documento(s) anexado(s) junto com o histórico: "${texto}".
+Entregue em 2 blocos separados por "---":
+🔍 DIAGNÓSTICO DO PRINT/ARQUIVO: O que aparece na imagem e a causa técnica.
+💬 RESPOSTA PRONTA PARA O CLIENTE: Mensagem direta em 1ª pessoa (${diretrizTom}, sem se apresentar e sem asteriscos **).`;
+        } else if (modo === 'desabafo') {
+            comando = `Contexto/desabafo sobre o caso:\n"${texto}"\n\nTransforme em uma resposta CURTA, DIRETA, FIRME E PROFISSIONAL (1 a 3 frases) em 1ª pessoa para o cliente, sem pedir desculpas.${regrasInviolaveisSaida}`;
+        } else if (modo === 'lapidar') {
+            comando = `Rascunho para lapidar:\n"${texto}"\n\nReescreva em 1ª pessoa com postura de Especialista Sênior (${diretrizTom}), clara e direta.${regrasInviolaveisSaida}`;
+        } else if (modo === 'triagem') {
+            precisaDosCards = false;
+            comando = `Histórico do cliente:\n"${texto}"\n\nEscreva APENAS 1 frase curta e direta em 1ª pessoa pedindo somente o dado que falta para investigar (condomínio, unidade, e-mail ou print).${regrasInviolaveisSaida}`;
+        } else {
+            comando = `Mensagem do cliente:\n"${texto}"\n\n${window.filaMidiasGemHUD.length > 0 ? `Há ${window.filaMidiasGemHUD.length} mídia(s)/print(s) anexado(s).` : ''}\nSiga rigorosamente o ${diretrizTom}.${regrasInviolaveisSaida}`;
+        }
+
+        const respostaBruta = await chamarMotorGeminiAPI(comando, precisaDosCards, {
+            onChunk: (parcial) => {
+                const bodyEl = doc.getElementById('gem-stream-body');
+                if (bodyEl) bodyEl.innerHTML = formatarHtmlRespostaGem(parcial);
+            }
+        });
+
+        const duracaoSeg = ((performance.now() - inicioMs) / 1000).toFixed(1);
+        const respostaLimpa = respostaBruta.replace(/\*\*([^*]+)\*\*/g, '$1').trim();
+        ultimaRespostaGeradaGem = respostaLimpa;
+        copiarTextoUniversal(respostaLimpa).catch(() => {});
+
+        const novoItemHist = {
+            id: Date.now(),
+            titulo: (texto.replace(/\s+/g, ' ').trim().slice(0, 22) || 'Resposta IA'),
+            hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+            modelo: window.ultimoModeloUsadoGem || 'gemini',
+            segundos: duracaoSeg,
+            resposta: respostaLimpa,
+            conversa: [
+                { role: 'user', parts: [{ text: comando }] },
+                { role: 'model', parts: [{ text: respostaLimpa }] }
+            ]
+        };
+
+        window.historicoRespostasGem.unshift(novoItemHist);
+        if (window.historicoRespostasGem.length > 5) {
+            window.historicoRespostasGem = window.historicoRespostasGem.slice(0, 5);
+        }
+        salvarHistoricoGemSessao();
+        renderizarResultadoCompletoGem(novoItemHist);
+
+        reagirAnjo(modo === 'desabafo' ? 'calm' : 'spark', 1500);
+        mostrarToast(`⚡ Resposta pronta em ${duracaoSeg}s e copiada!`);
+    } catch (err) {
+        reagirAnjo('normal', 0);
+        outBox.innerHTML = `<div class="gem-ans-body" style="color:#f87171;">❌ ${err.message}</div>`;
     }
+};
+
+// 5. CONTINUIDADE DA CONVERSA E REFINO EM 1 CLIQUE (MESMO ASSUNTO!)
+window.continuarAssuntoGem = async function(instrucaoDireta = null) {
+    const doc = obterDocAtivo();
+    const inputFollow = doc.getElementById('gem-followup-input');
+    const pergunta = (instrucaoDireta || inputFollow?.value || '').trim();
+    if (!pergunta) return mostrarToast("Digite o ajuste ou questionamento para continuar!");
+
+    const itemHist = window.historicoRespostasGem.find(h => h.id === window.idHistoricoGemAtivo) || window.historicoRespostasGem[0];
+    if (!itemHist) return mostrarToast("Gere uma resposta primeiro!");
+
+    if (inputFollow && !instrucaoDireta) inputFollow.value = '';
+    const bodyEl = doc.getElementById('gem-stream-body');
+    if (bodyEl) bodyEl.innerHTML = `<em>⚡ Atualizando resposta com seu ajuste...</em>`;
+    reagirAnjo('thinking', 0);
+
+    const inicioMs = performance.now();
+    const conversaAtual = Array.isArray(itemHist.conversa) ? [...itemHist.conversa] : [
+        { role: 'model', parts: [{ text: itemHist.resposta }] }
+    ];
+    conversaAtual.push({
+        role: 'user',
+        parts: [{ text: `${pergunta}\n\nEntregue APENAS a resposta final atualizada pronta para enviar ao cliente em 1ª pessoa, sem asteriscos (**).` }]
+    });
+
+    try {
+        const respostaBruta = await chamarMotorGeminiAPI(pergunta, true, {
+            historicoContents: conversaAtual,
+            onChunk: (parcial) => {
+                const b = doc.getElementById('gem-stream-body');
+                if (b) b.innerHTML = formatarHtmlRespostaGem(parcial);
+            }
+        });
+
+        const duracaoSeg = ((performance.now() - inicioMs) / 1000).toFixed(1);
+        const respostaLimpa = respostaBruta.replace(/\*\*([^*]+)\*\*/g, '$1').trim();
+        conversaAtual.push({ role: 'model', parts: [{ text: respostaLimpa }] });
+
+        itemHist.resposta = respostaLimpa;
+        itemHist.segundos = duracaoSeg;
+        itemHist.modelo = window.ultimoModeloUsadoGem || itemHist.modelo;
+        itemHist.conversa = conversaAtual.slice(-10); // Mantém últimos 5 turnos leves
+        salvarHistoricoGemSessao();
+
+        copiarTextoUniversal(respostaLimpa).catch(() => {});
+        renderizarResultadoCompletoGem(itemHist);
+        reagirAnjo('spark', 1200);
+        mostrarToast(`💬 Resposta atualizada em ${duracaoSeg}s e copiada!`);
+    } catch (err) {
+        reagirAnjo('normal', 0);
+        mostrarToast(`❌ ${err.message}`);
+    }
+};
+
+window.refinarRespostaGem = function(tipo) {
+    const comandos = {
+        encurtar: 'Deixe a resposta acima ainda mais curta e direta (máximo 2 frases objetivas), mantendo a solução.',
+        firme: 'Reescreva a resposta acima em tom mais firme, técnico e definitivo, sem pedir desculpas.',
+        passos: 'Reorganize a resposta acima em um passo a passo numerado curto (1., 2., 3.) fácil de ler no WhatsApp.',
+        amigavel: 'Reescreva a resposta acima em tom mais leve, cordial e acolhedor, mantendo a objetividade.'
+    };
+    continuarAssuntoGem(comandos[tipo] || comandos.encurtar);
+};
+
+// 6. AUTO-DETECÇÃO DE NOME E CONDOMÍNIO (1 CLIQUE)
+window.detectarDadosClienteNoTexto = async function() {
+    const doc = obterDocAtivo();
+    let fonte = doc.getElementById('gemini-hud-input')?.value.trim() || '';
+    if (!fonte) {
+        fonte = await lerTextoUniversalClipboard();
+    }
+    if (!fonte) return mostrarToast("Cole uma conversa na IA Gem ou copie um texto primeiro!");
+
+    let achouAlgo = false;
+    const matchCond = fonte.match(/(?:condom[ií]nio|residencial|edif[ií]cio|edificio)\s+([A-ZÀ-Úa-zà-ú0-9][A-ZÀ-Úa-zà-ú0-9\s\-]{2,36}?)(?=[,.\n!?]|$|unidade|apto|bloco|torre)/i);
+    if (matchCond && matchCond[1]) {
+        const elCond = doc.getElementById('var-condominio') || document.getElementById('var-condominio');
+        if (elCond) {
+            elCond.value = capitalizarNomeCliente(matchCond[1].trim());
+            achouAlgo = true;
+        }
+    }
+
+    const matchNome = fonte.match(/(?:nome|me chamo|sou o|sou a|aqui [eé] o|aqui [eé] a|falo com)\s*:?\s*([A-ZÀ-Úa-zà-ú]{2,18}(?:\s+[A-ZÀ-Úa-zà-ú]{2,18})?)/i);
+    if (matchNome && matchNome[1]) {
+        const elNome = doc.getElementById('var-nome') || document.getElementById('var-nome');
+        if (elNome) {
+            elNome.value = capitalizarNomeCliente(matchNome[1].trim());
+            achouAlgo = true;
+        }
+    }
+
+    if (achouAlgo) {
+        aoDigitarVariavelPersonalizacao();
+        mostrarToast("✨ Dados do cliente preenchidos automaticamente!");
+    } else {
+        mostrarToast("Não identifiquei Nome/Condomínio explícito no texto.");
+    }
+};
+
+// ==============================================================
+// 12. CHECKLIST INTERATIVO N1/N2 (SEU CONDOMÍNIO • NO CLIQUE)
+// ==============================================================
+const CHECKLISTS_N1N2 = {
+    app: {
+        label: '📱 App / Convite',
+        passos: [
+            { txt: 'Confirmar e-mail cadastrado e unidade/bloco', msg: 'Consegue me confirmar o seu e-mail cadastrado, o nome do condomínio e a sua unidade/bloco para eu verificar o acesso?' },
+            { txt: 'Checar caixa de Spam / Lixeira pelo convite', msg: 'Verifique por gentileza na caixa de Spam ou Lixo Eletrônico se o e-mail de ativação do Seu Condomínio chegou lá.' },
+            { txt: 'Convite com nome de antigo morador (Editar Perfil)', msg: 'Nesse caso, clique em "Editar perfil" no link, crie sua senha e depois acesse "Editar perfil" novamente para atualizar os dados. O ideal é a administração excluir o cadastro antigo e criar um novo.' }
+        ]
+    },
+    boleto: {
+        label: '💰 Boleto / Remessa',
+        passos: [
+            { txt: 'Confirmar competência/mês e unidade do boleto', msg: 'Pode me informar o nome do condomínio, a unidade e o mês de vencimento do boleto para eu analisar?' },
+            { txt: 'Validar se remessa foi enviada ao banco', msg: 'Verifique em Financeiro > Cobranças > Ações > Remessas se o boleto já foi registrado junto ao banco.' },
+            { txt: 'Pedir print da mensagem de erro na emissão', msg: 'Consegue me enviar um print da tela onde aparece o erro ao tentar gerar o boleto?' }
+        ]
+    },
+    ofx: {
+        label: '🔍 Conciliação OFX',
+        passos: [
+            { txt: 'Conferir período exato do extrato OFX importado', msg: 'Consegue me confirmar qual período (data inicial e final) foi exportado no arquivo OFX do banco?' },
+            { txt: 'Verificar se há boleto excluído sem baixa no banco', msg: 'Verifique se algum boleto liquidado no extrato foi excluído no sistema antes da baixa de retorno, causando a divergência.' },
+            { txt: 'Solicitar arquivo OFX ou print da divergência', msg: 'Se puder me enviar o print da tela de conciliação (ou o valor exato da diferença), já analiso a causa raiz para você!' }
+        ]
+    },
+    portaria: {
+        label: '🛡️ Portaria / Acessos',
+        passos: [
+            { txt: 'Validar se a permissão do perfil está ativa', msg: 'Verifique no cadastro da unidade se o morador está com status ativo e permissão habilitada para a portaria.' },
+            { txt: 'Testar em aba anônima / limpar cache do navegador', msg: 'Por gentileza, faça um teste abrindo o sistema em uma Aba Anônima (Ctrl + Shift + N) para descartarmos cache do navegador.' }
+        ]
+    }
+};
+let abaChecklistAtiva = 'app';
+
+window.selecionarAbaChecklist = function(chave) {
+    abaChecklistAtiva = chave;
+    renderizarChecklistN1N2();
+};
+
+window.copiarPerguntaChecklist = function(chave, idx) {
+    const passo = CHECKLISTS_N1N2[chave]?.passos?.[idx];
+    if (!passo) return;
+    copiarTextoUniversal(passo.msg).catch(() => {});
+    reagirAnjo('spark', 650);
+    mostrarToast("✓ Pergunta de triagem copiada pro Ctrl+V!");
+};
+
+window.renderizarChecklistN1N2 = function() {
+    const doc = obterDocAtivo();
+    const tabs = doc.getElementById('checklist-tabs-container');
+    const list = doc.getElementById('checklist-steps-container');
+    if (!tabs || !list) return;
+
+    tabs.innerHTML = Object.entries(CHECKLISTS_N1N2).map(([k, v]) => `
+        <button type="button" class="gem-tone-chip ${abaChecklistAtiva === k ? 'active' : ''}" onclick="selecionarAbaChecklist('${k}')">${v.label}</button>
+    `).join('');
+
+    const atual = CHECKLISTS_N1N2[abaChecklistAtiva] || CHECKLISTS_N1N2.app;
+    list.innerHTML = atual.passos.map((p, idx) => `
+        <div class="checklist-step-row">
+            <label><input type="checkbox"> <span>${p.txt}</span></label>
+            <button type="button" class="btn-hud-action" style="padding:2px 7px; font-size:9px; border-color:var(--neon-blue); color:#7dd3fc;" onclick="copiarPerguntaChecklist('${abaChecklistAtiva}', ${idx})">Copiar</button>
+        </div>
+    `).join('');
+};
+
+// ==============================================================
+// 13. ANJO HOLOGRÁFICO + SANTUÁRIO DE SERENIDADE + SOM ETÉREO (WEB AUDIO)
+// ==============================================================
+let somEtereoAtivo = localStorage.getItem('sc_holo_sound') === 'true';
+let modoSutilAnjo = localStorage.getItem('sc_holo_subtle') === 'true';
+let vistaPortalSidebar = localStorage.getItem('sc_holo_portal_view') || 'anjo';
+let _timerEstadoAnjo = null;
+let _timersRespiracao = [];
+let _audioCtxEtereo = null;
+
+const PRECES_SERENIDADE = [
+    "“A calma é o escudo da alma serena. Que a paz guie cada palavra do seu atendimento.”",
+    "“Senhor, fazei-me instrumento da Vossa paz. Onde houver impaciência, que eu leve serenidade.”",
+    "“Respire fundo: você não precisa absorver a pressa do outro. Responda em luz, firmeza e equilíbrio.”",
+    "“A paciência também é caridade. Cada atendimento feito com amor eleva o seu próprio espírito.”",
+    "“Que os bons espíritos envolvam este ambiente de trabalho em harmonia, clareza e proteção.”"
+];
+
+function inicializarPortalAnjoHolografico() {
+    const portal = document.getElementById('sidebar-holo-portal');
+    const viewAnjo = document.getElementById('portal-view-anjo');
+    const viewPlaneta = document.getElementById('portal-view-planeta');
+    const titulo = document.getElementById('holo-portal-title');
+    const btnSom = document.getElementById('btn-holo-sound');
+    const btnSutil = document.getElementById('btn-holo-subtle');
+
+    if (portal) portal.classList.toggle('holo-subtle', modoSutilAnjo);
+    if (viewAnjo && viewPlaneta) {
+        viewAnjo.style.display = vistaPortalSidebar === 'anjo' ? 'flex' : 'none';
+        viewPlaneta.style.display = vistaPortalSidebar === 'planeta' ? 'flex' : 'none';
+    }
+    if (titulo) {
+        titulo.innerText = vistaPortalSidebar === 'anjo' ? '✦ ANJO DE LUZ' : '✦ ÓRBITA SERENA';
+    }
+    if (btnSom) {
+        btnSom.classList.toggle('active', somEtereoAtivo);
+        btnSom.innerHTML = `<span class="material-icons-round">${somEtereoAtivo ? 'volume_up' : 'volume_off'}</span>`;
+    }
+    if (btnSutil) {
+        btnSutil.classList.toggle('active', modoSutilAnjo);
+    }
+}
+
+window.alternarPortalSidebar = function() {
+    vistaPortalSidebar = (vistaPortalSidebar === 'anjo') ? 'planeta' : 'anjo';
+    localStorage.setItem('sc_holo_portal_view', vistaPortalSidebar);
+    inicializarPortalAnjoHolografico();
+    tocarNotaEterea('suave');
+};
+
+window.alternarModoSutilAnjo = function() {
+    modoSutilAnjo = !modoSutilAnjo;
+    localStorage.setItem('sc_holo_subtle', modoSutilAnjo ? 'true' : 'false');
+    inicializarPortalAnjoHolografico();
+    mostrarToast(modoSutilAnjo ? "✨ Holograma em modo sutil." : "👼 Holograma em modo pleno!");
+};
+
+window.alternarSomEtereo = function() {
+    somEtereoAtivo = !somEtereoAtivo;
+    localStorage.setItem('sc_holo_sound', somEtereoAtivo ? 'true' : 'false');
+    inicializarPortalAnjoHolografico();
+    if (somEtereoAtivo) {
+        tocarNotaEterea('bencao');
+        mostrarToast("🔔 Som etéreo suave ativado!");
+    } else {
+        mostrarToast("🔇 Som etéreo silenciado.");
+    }
+};
+
+window.tocarNotaEterea = function(tipo = 'suave') {
+    if (!somEtereoAtivo) return;
+    try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!_audioCtxEtereo) _audioCtxEtereo = new AudioCtx();
+        if (_audioCtxEtereo.state === 'suspended') _audioCtxEtereo.resume();
+
+        const agora = _audioCtxEtereo.currentTime;
+        const notas = tipo === 'bencao' ? [528, 660, 792] : [432, 648];
+
+        notas.forEach((freq, i) => {
+            const osc = _audioCtxEtereo.createOscillator();
+            const gain = _audioCtxEtereo.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, agora + i * 0.09);
+
+            gain.gain.setValueAtTime(0.0001, agora + i * 0.09);
+            gain.gain.exponentialRampToValueAtTime(0.032, agora + i * 0.09 + 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.0001, agora + i * 0.09 + 0.95);
+
+            osc.connect(gain);
+            gain.connect(_audioCtxEtereo.destination);
+            osc.start(agora + i * 0.09);
+            osc.stop(agora + i * 0.09 + 1.0);
+        });
+    } catch (e) {}
+};
+
+window.reagirAnjo = function(estado = 'normal', duracaoMs = 1200) {
+    const portal = document.getElementById('sidebar-holo-portal');
+    const lbl = document.getElementById('angel-status-label');
+    if (!portal) return;
+
+    clearTimeout(_timerEstadoAnjo);
+    portal.classList.remove('state-thinking', 'state-calm', 'state-spark');
+
+    if (estado === 'thinking') {
+        portal.classList.add('state-thinking');
+        if (lbl) lbl.innerText = 'EM SINTONIA...';
+    } else if (estado === 'calm') {
+        portal.classList.add('state-calm');
+        if (lbl) lbl.innerText = 'PAZ & EQUILÍBRIO';
+    } else if (estado === 'spark') {
+        portal.classList.add('state-spark');
+        if (lbl) lbl.innerText = 'LUZ IRRADIADA';
+    } else {
+        if (lbl) lbl.innerText = 'LUZ & PAZ';
+    }
+
+    if (duracaoMs > 0) {
+        _timerEstadoAnjo = setTimeout(() => {
+            portal.classList.remove('state-thinking', 'state-calm', 'state-spark');
+            if (lbl) lbl.innerText = 'LUZ & PAZ';
+        }, duracaoMs);
+    }
+};
+
+window.pulsarBencaoAnjo = function() {
+    reagirAnjo('calm', 2400);
+    tocarNotaEterea('bencao');
+    trocarPensamentoEspirita();
+    mostrarToast("👼 Luz, paz e serenidade irradiadas para o seu atendimento!");
+};
+
+window.novaPreceSerenidade = function() {
+    const el = document.getElementById('serenidade-quote-text');
+    if (!el) return;
+    const nova = PRECES_SERENIDADE[Math.floor(Math.random() * PRECES_SERENIDADE.length)];
+    el.innerText = nova;
+    tocarNotaEterea('suave');
+};
+
+window.iniciarRespiracaoGuiada = function() {
+    _timersRespiracao.forEach(t => clearTimeout(t));
+    _timersRespiracao = [];
+
+    const stage = document.getElementById('serenidade-breath-stage');
+    const phase = document.getElementById('serenidade-breath-phase');
+    if (!stage || !phase) return;
+
+    const ciclo = () => {
+        stage.classList.remove('breath-hold', 'breath-out');
+        stage.classList.add('breath-in');
+        phase.innerText = '🌬️ Inspire luz profundamente... (4s)';
+
+        _timersRespiracao.push(setTimeout(() => {
+            stage.classList.remove('breath-in');
+            stage.classList.add('breath-hold');
+            phase.innerText = '✨ Segure em serenidade... (2s)';
+        }, 4000));
+
+        _timersRespiracao.push(setTimeout(() => {
+            stage.classList.remove('breath-hold');
+            stage.classList.add('breath-out');
+            phase.innerText = '🕊️ Solte toda tensão devagar... (6s)';
+        }, 6000));
+
+        _timersRespiracao.push(setTimeout(() => {
+            const modal = document.getElementById('modal-serenidade-anjo');
+            if (modal && modal.style.display !== 'none') ciclo();
+        }, 12200));
+    };
+
+    ciclo();
+};
+
+window.abrirSantuarioSerenidade = function() {
+    const modal = document.getElementById('modal-serenidade-anjo');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    novaPreceSerenidade();
+    tocarNotaEterea('bencao');
+    iniciarRespiracaoGuiada();
+};
+
+window.fecharSantuarioSerenidade = function() {
+    _timersRespiracao.forEach(t => clearTimeout(t));
+    _timersRespiracao = [];
+    const modal = document.getElementById('modal-serenidade-anjo');
+    if (modal) modal.style.display = 'none';
 };
