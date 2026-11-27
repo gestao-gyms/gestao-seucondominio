@@ -1596,7 +1596,7 @@ let listaAcoesRapidas = (Array.isArray(acoesSalvasCache) && acoesSalvasCache.len
 
 let configGeminiGem = JSON.parse(localStorage.getItem('sc_gemini_gem_config')) || {
     apiKey: '',
-    modelo: 'gemini-3.5-flash',
+    modelo: 'gemini-flash-lite-latest',
     instrucaoGem: ''
 };
 
@@ -1853,7 +1853,7 @@ function inicializarBarraCopilotHUD() {
 
             <!-- Caixa onde você cola a fala do cliente ou digita seu desabafo -->
             <div class="gemini-live-box" style="display:flex; flex-direction:column; gap:6px;">
-               <textarea id="gemini-hud-input" style="height:${alturaSalva};" placeholder="Cole aqui a conversa inteira (Texto + Imagens + Áudio + PDF) ou dê Ctrl+V em até 10 prints..." oninput="salvarTextoRascunhoGem(this.value)"></textarea>
+               <textarea id="gemini-hud-input" style="height:${alturaSalva};" placeholder="Cole aqui a conversa inteira (Texto + Imagens + Áudio + PDF) ou dê Ctrl+V em até 10 prints... (Enter envia, Shift+Enter quebra linha)"></textarea>
                 
                 <!-- GALERIA AUTOMÁTICA DE ATÉ 10 MÍDIAS COLADAS NA TELA -->
                 <div id="gem-hud-attachments-bar" style="display:none; gap:8px; flex-wrap:wrap; align-items:center; padding:8px 10px; background:rgba(2, 6, 18, 0.92); border:1px dashed #38bdf8; border-radius:9px;"></div>
@@ -1935,9 +1935,20 @@ function inicializarBarraCopilotHUD() {
     const txtNote = doc.getElementById('hud-notes-textarea');
     if (txtNote) txtNote.value = notaSalva;
 
-    const rascunhoGemSalvo = localStorage.getItem('sc_gem_rascunho_input') || '';
+    localStorage.removeItem('sc_gem_rascunho_input');
     const txtGemInput = doc.getElementById('gemini-hud-input');
-    if (txtGemInput) txtGemInput.value = rascunhoGemSalvo;
+    if (txtGemInput) {
+        txtGemInput.value = '';
+        if (!txtGemInput.dataset.enterResponderConectado) {
+            txtGemInput.dataset.enterResponderConectado = 'true';
+            txtGemInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && !e.isComposing) {
+                    e.preventDefault();
+                    executarGemNoHUD('responder');
+                }
+            });
+        }
+    }
 
     const txtViewBtn = doc.getElementById('txt-view-mode');
     if (txtViewBtn) txtViewBtn.innerText = modoCompacto ? "Expandir" : "Compactar";
@@ -2431,7 +2442,7 @@ async function chamarMotorGeminiAPI(promptUsuario, usarContextoScripts = true) {
     const cerebroTotal = usarContextoScripts ? compilarCerebroCompletoCockpit() : "";
     const contextoVariaveis = `\n\n=== CONTEXTO ATUAL ===\nSaudação: "${saudacao}" | Cliente: "${nomeCliente || 'Não informado'}" | Condomínio: "${nomeCond || 'Não informado'}"`;
 
-    const modeloUsado = 'gemini-3.8-flash';
+    const modeloUsado = 'gemini-flash-latest';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modeloUsado}:generateContent?key=${encodeURIComponent(configGeminiGem.apiKey)}`;
 
     const basePayload = {
@@ -5102,13 +5113,26 @@ compilarCerebroCompletoCockpit = function(textoPergunta = "") {
     return `\n\n=== PROCEDIMENTOS OFICIAIS DO SUPORTE (USE ESTES CAMINHOS QUANDO APLICÁVEL) ===\n${selecionados}${notasFixadasDiario}`;
 };
 
-// 2. DESCOBERTA INTELIGENTE DE MODELOS (PRIORIZA OS MAIS RÁPIDOS NO MODO VELOZ)
+// 2. DESCOBERTA INTELIGENTE DE MODELOS (USA ALIASES '-latest' + ORDENAÇÃO DINÂMICA POR VERSÃO)
 let listaModelosReaisCache = null;
+const modelosBloqueadosSessao = new Set();
+
+function extrairVersaoGemini(nome) {
+    const m = nome.match(/gemini-(\d+)(?:\.(\d+))?/i);
+    if (!m) return 0;
+    return parseInt(m[1], 10) * 100 + parseInt(m[2] || '0', 10);
+}
 
 async function obterModelosReaisDaChave(apiKey) {
     if (listaModelosReaisCache && listaModelosReaisCache.length > 0) {
-        return listaModelosReaisCache;
+        return listaModelosReaisCache.filter(m => !modelosBloqueadosSessao.has(m));
     }
+
+    const veloz = window.modoVelocidadeGem === 'veloz';
+    const aliasesPrioritarios = veloz
+        ? ['gemini-flash-lite-latest', 'gemini-flash-latest']
+        : ['gemini-flash-latest', 'gemini-flash-lite-latest'];
+
     try {
         const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
         const data = await resp.json();
@@ -5116,39 +5140,49 @@ async function obterModelosReaisDaChave(apiKey) {
             const disponiveis = data.models
                 .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes('generateContent'))
                 .map(m => m.name.replace('models/', ''))
-                .filter(nome => nome.includes('gemini') && !nome.includes('2.0') && !nome.includes('1.5') && !nome.includes('vision') && !nome.includes('tts') && !nome.includes('image') && !nome.includes('embedding'));
+                .filter(nome => {
+                    if (!nome.includes('gemini')) return false;
+                    if (modelosBloqueadosSessao.has(nome)) return false;
+                    // Ignora modelos legados, experimentais não-texto e famílias descontinuadas
+                    if (/(?:^|-)(?:1\.0|1\.5|2\.0|2\.5-flash-lite)(?:-|$)/.test(nome)) return false;
+                    if (/vision|tts|image|embedding|robotics|audio|aqa|customtools/i.test(nome)) return false;
+                    return nome.includes('flash');
+                });
 
-            const veloz = window.modoVelocidadeGem === 'veloz';
             disponiveis.sort((a, b) => {
-                const peso = (n) => {
-                    if (veloz) {
-                        if (n.includes('3.5-flash-lite')) return 1;
-                        if (n.includes('3.6-flash')) return 2;
-                        if (n.includes('3.8-flash')) return 3;
-                        if (n.includes('flash-lite')) return 4;
-                        if (n.includes('2.5-flash') && !n.includes('pro')) return 5;
-                        if (n.includes('flash')) return 6;
-                        return 9;
-                    } else {
-                        if (n.includes('3.8-flash')) return 1;
-                        if (n.includes('3.6-flash')) return 2;
-                        if (n.includes('2.5-flash') && !n.includes('lite')) return 3;
-                        if (n.includes('flash') && !n.includes('lite')) return 4;
-                        if (n.includes('flash-lite')) return 5;
-                        return 9;
-                    }
-                };
-                return peso(a) - peso(b);
+                const aLatest = a.endsWith('-latest') ? 1 : 0;
+                const bLatest = b.endsWith('-latest') ? 1 : 0;
+                const aLite = a.includes('flash-lite') ? 1 : 0;
+                const bLite = b.includes('flash-lite') ? 1 : 0;
+
+                // No modo veloz: flash-lite primeiro; no analítico: flash padrão primeiro
+                if (veloz && aLite !== bLite) return bLite - aLite;
+                if (!veloz && aLite !== bLite) return aLite - bLite;
+
+                // Aliases -latest sempre têm prioridade máxima dentro da categoria
+                if (aLatest !== bLatest) return bLatest - aLatest;
+
+                // Entre versões numeradas, sempre a mais nova primeiro (ex: 4.0 > 3.8 > 3.5 > 2.5)
+                const diffVer = extrairVersaoGemini(b) - extrairVersaoGemini(a);
+                if (diffVer !== 0) return diffVer;
+
+                // Prefere versões estáveis em vez de preview/exp
+                const aExp = /preview|exp/i.test(a) ? 1 : 0;
+                const bExp = /preview|exp/i.test(b) ? 1 : 0;
+                return aExp - bExp;
             });
 
-            if (disponiveis.length > 0) {
-                const extras = ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'].filter(m => !disponiveis.includes(m));
-                listaModelosReaisCache = [...disponiveis.slice(0, 5), ...extras].slice(0, 6);
+            const combinados = [...new Set([...aliasesPrioritarios, ...disponiveis])]
+                .filter(m => !modelosBloqueadosSessao.has(m));
+
+            if (combinados.length > 0) {
+                listaModelosReaisCache = combinados.slice(0, 6);
                 return listaModelosReaisCache;
             }
         }
     } catch (e) {}
-    return ['gemini-3.8-flash', 'gemini-3.6-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
+
+    return aliasesPrioritarios.filter(m => !modelosBloqueadosSessao.has(m));
 }
 
 // 3. MOTOR DE STREAMING SSE + ZERO-THINKING BUDGET (RESPOSTA COMEÇA EM ~0.8s!)
@@ -5242,6 +5276,11 @@ chamarMotorGeminiAPI = async function(promptUsuario, usarContextoScripts = true,
                     // Se o modelo não aceita thinkingConfig, tenta imediatamente sem ele!
                     if (!tentarSemThinking && /thinking/i.test(errMsg)) {
                         continue;
+                    }
+                    // Se o modelo foi descontinuado/removido, bloqueia na sessão e força atualização do cache
+                    if (/no longer available|not found|deprecated|is not supported/i.test(errMsg)) {
+                        modelosBloqueadosSessao.add(mod);
+                        listaModelosReaisCache = null;
                     }
                     ultimoErro = errMsg;
                     break;
